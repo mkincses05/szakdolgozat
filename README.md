@@ -1,4 +1,4 @@
-# Card Game
+# Wildhand: The Card Game
 
 A multiplayer card game with a custom rule system. The game combines simple color/number-based card matching with combos, stackable penalties, player interaction, and a risk/reward mechanic.
 
