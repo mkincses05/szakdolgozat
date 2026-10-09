@@ -95,6 +95,8 @@ Both players:
 
 Players cannot see which card the other player selected before the exchange.
 
+If either participant has no card to exchange after the Swap card has been played, the exchange is skipped. The turn still finishes normally, and the win check is performed after this skipped effect.
+
 ---
 
 ## 🎨 Color Change
@@ -194,7 +196,19 @@ Play a special card and resolve its effect.
 
 If the player has at least one legally playable card, they may choose the Risk action instead.
 
-After the turn is resolved, play passes to the next player.
+### 4. No playable card
+
+If the player has no legally playable card, they draw **1 card** and their turn ends.
+If the draw pile cannot provide a card after reshuffling, the player passes without drawing.
+
+Every turn is resolved in this order:
+
+1. The played card or combo is removed from the player's hand and placed on the discard pile.
+2. The card's complete effect is resolved.
+3. The game checks whether the current player has won.
+4. If nobody has won, play passes to the next player.
+
+The win check is performed only after all effects of the turn have finished. A player therefore wins only if their hand is still empty after the complete resolution.
 
 ---
 
@@ -236,9 +250,16 @@ This allows the deck to continuously recycle throughout the game.
 
 # 🏆 Winning
 
-When a player's hand reaches **0 cards**, that player immediately wins the game.
+A player wins when their hand contains **0 cards after the complete resolution of their turn**.
 
-The game ends as soon as a player has no cards remaining.
+The game does not end in the middle of a card effect.
+
+This ordering is important for special cards:
+
+* A player who plays their last card as **Storm** does not win immediately, because Storm first makes every player, including the Storm player, draw 1 card. The win check happens after that draw.
+* A player who plays their last card as **Swap** wins if the exchange is skipped because one of the participants has no card to exchange. The win check happens after the skipped effect.
+
+Once the post-effect win check identifies a player, the game changes to `finished` and no next turn is created.
 
 ---
 

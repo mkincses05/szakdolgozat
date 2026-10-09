@@ -49,9 +49,10 @@ The game can be described as a finite state machine.
    - The next player must either continue the chain or draw the accumulated cards
 
 5. **Round Resolution**
-   - Turn effects are applied
-   - Next player is selected
-   - Win condition is checked
+   - The played card or combo is committed
+   - The complete card effect is applied
+   - A player with an empty hand is checked for victory
+   - The next player is selected only if nobody has won
 
 6. **Game End**
    - A player reaches zero cards
@@ -127,6 +128,14 @@ The first version of the data model should include the following main entities:
 - Risk action restrictions
 - Win condition handling
 
+The following cases are mandatory acceptance tests for the engine and server:
+
+- A player with no legal card draws one card and the turn ends.
+- A player with no legal card passes when the draw pile and reshuffle cannot provide a card.
+- A last-card Storm resolves its draw effect before the win check, so the Storm player does not win from that play.
+- A last-card Swap skips the exchange when either participant has no card to exchange, then the empty hand is checked for victory.
+- A player who is empty after all effects is moved to `finished`, and no next turn is created.
+
 ### Protocol tests
 - Event payload validation
 - Duplicate action rejection
@@ -141,9 +150,25 @@ The first version of the data model should include the following main entities:
 
 ### Edge cases
 - Empty draw pile and reshuffle behavior
+- No legally playable card: draw one card and end the turn; pass if no card can be drawn
+- Win checks happen only after the complete effect of the turn
+- A last-card Storm draws a card before the win check, so it does not automatically win
+- A last-card Swap skips the exchange if either participant has no card, then performs the win check
 - Player disconnect during turn
 - Simultaneous actions during state transitions
 - End-game triggered during a chained action
+
+### Turn resolution contract
+
+The engine, server and tests must use the same order for every turn:
+
+1. Commit the played card or combo to the discard pile.
+2. Resolve every effect caused by that play.
+3. Check the active player's hand size.
+4. If the hand is empty, transition to `Game End` and do not create another turn.
+5. Otherwise, select the next player.
+
+For a normal turn with no legally playable card, the player draws one card and the turn ends. If reshuffling cannot produce a card, the player passes without drawing. A Swap effect is conditional: if either participant has no card after the Swap card has left the active player's hand, no exchange occurs.
 
 ## 6. Open Questions
 - Exact number of players supported
