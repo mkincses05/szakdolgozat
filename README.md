@@ -2,9 +2,31 @@
 
 A multiplayer card game with a custom rule system. The game combines simple color/number-based card matching with combos, stackable penalties, player interaction, and a risk/reward mechanic.
 
+## 👥 Players and Match End
+
+Each match can be played by **2 to 8 players**.
+
+The first player whose hand becomes empty after the complete resolution of their turn **wins**. The match does not end at that point:
+
+* the winner can remain in the room as a spectator or leave the game;
+* the remaining players continue playing;
+* the match ends when only one active player remains.
+
+The winner and the order in which the other players finish are shown in the final results.
+
+## 🌍 Internationalization
+
+The game will be available in:
+
+* English (`en`)
+* Hungarian (`hu`)
+* German (`de`)
+
+You can choose the language used throughout the game, including the main menu, lobby, gameplay, spectator view, and results.
+
 ## 🎯 Objective
 
-The objective of the game is to be the **first player to get rid of all cards in their hand**.
+The objective of the game is to be the **first active player to get rid of all cards in their hand**. That player wins the match, while the other active players continue until only one active player remains.
 
 ---
 
@@ -53,7 +75,7 @@ There are **24 special cards**.
 | Card            | Amount | Effect                                               |
 | --------------- | -----: | ---------------------------------------------------- |
 | ➕ +2            |      8 | The next player must draw 2 cards.                   |
-| 🌪️ Storm       |      4 | Every player draws 1 card.                           |
+| 🌪️ Storm       |      4 | All remaining players draw the same random amount of cards (1–3). |
 | 🔄 Swap         |      4 | Choose another player and exchange 1 card with them. |
 | 🎨 Color Change |      4 | Choose the color that will be active next.           |
 | 👁️ Spy         |      4 | Look at another player's entire hand.                |
@@ -78,7 +100,9 @@ When a +2 penalty is active, the only way to pass the penalty is by playing anot
 
 ## 🌪️ Storm
 
-When a Storm card is played, **every player draws 1 card**, including the player who played the Storm.
+When a Storm card is played, a random number between **1 and 3** is chosen once. **Every player who is still in the game draws up to that many cards**, including the player who played the Storm. Players who have already won are not affected.
+
+The same number is the maximum requested amount for everyone affected by that Storm. The general hand limit can reduce the actual amount for individual players.
 
 The Storm card can be played on any card.
 
@@ -119,6 +143,7 @@ The chosen color becomes the active color for the next player.
 The player who plays the Spy card chooses another player and may **look at their entire hand**.
 
 The Spy only provides information. No cards are taken or exchanged as a result of using it.
+Only the player who played the Spy can see the revealed hand, and their turn ends after the Spy effect is resolved.
 
 ---
 
@@ -205,10 +230,11 @@ Every turn is resolved in this order:
 
 1. The played card or combo is removed from the player's hand and placed on the discard pile.
 2. The card's complete effect is resolved.
-3. The game checks whether the current player has won.
-4. If nobody has won, play passes to the next player.
+3. If the player's hand is empty, that player wins and may stay to watch or leave.
+4. If more than one player remains in the game, play passes to the next player.
+5. When only one player remains, the match ends and the finishing order is shown.
 
-The win check is performed only after all effects of the turn have finished. A player therefore wins only if their hand is still empty after the complete resolution.
+The winner check is performed only after all effects of the turn have finished. A player therefore wins only if their hand is still empty after the complete resolution.
 
 ---
 
@@ -240,26 +266,32 @@ They must either:
 When the draw pile becomes empty:
 
 1. The top card of the discard pile remains in play.
-2. All other discarded cards are collected.
-3. The collected cards are shuffled.
-4. They become the new draw pile.
+2. All other discarded cards are collected as reusable cards.
+3. If more than 25 reusable cards are available, they are shuffled into a new draw pile.
+4. If 25 or fewer reusable cards are available, a new 104-card deck is added before the reusable cards are shuffled into the new draw pile.
 
-This allows the deck to continuously recycle throughout the game.
+## 🖐️ Hand Limit
+
+A player's hand can contain at most **20 cards**. This limit has priority over every card effect.
+
+The limit applies to normal draws, `Take a Chance`, `+2`, Storm, and every other card effect. A player never receives more than 20 cards. If a player has fewer than 20 cards, they draw only as many cards as fit in their hand. Any cards that do not fit remain in the draw pile.
+
+If a `+2` effect reaches the hand limit, the player draws only the cards that fit and the penalty is completed.
 
 ---
 
 # 🏆 Winning
 
-A player wins when their hand contains **0 cards after the complete resolution of their turn**.
+A player wins when their hand contains **0 cards after the complete resolution of their turn**. The winner can remain in the game as a spectator or leave the room at any time.
 
-The game does not end in the middle of a card effect.
+The game does not end in the middle of a card effect, and it does not end immediately when the first player wins.
 
 This ordering is important for special cards:
 
-* A player who plays their last card as **Storm** does not win immediately, because Storm first makes every player, including the Storm player, draw 1 card. The win check happens after that draw.
+* A player who plays their last card as **Storm** does not win immediately, because Storm first makes every remaining player, including the Storm player, draw the same random amount of cards. The win check happens after that draw.
 * A player who plays their last card as **Swap** wins if the exchange is skipped because one of the participants has no card to exchange. The win check happens after the skipped effect.
 
-Once the post-effect win check identifies a player, the game changes to `finished` and no next turn is created.
+Once a player wins, the remaining players continue until only one player remains.
 
 ---
 

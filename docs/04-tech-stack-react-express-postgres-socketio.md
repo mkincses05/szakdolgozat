@@ -15,7 +15,10 @@ In this project, React is a good fit for:
 - lobby and room screens
 - the main gameplay interface
 - player hand and action controls
+- the spectator view for players who have finished
 - result and summary views
+
+The frontend should support i18n for English, Hungarian, and German. Translations should cover all user-facing labels, validation messages, status indicators, spectator controls, and result screens.
 
 ## Express
 Express is the backend web framework. It handles HTTP requests, routes, middleware, and server-side application logic.
@@ -34,6 +37,7 @@ It is suitable for storing:
 - rooms
 - match history
 - results and statistics
+- finishing order and player status history
 - long-term game records
 
 PostgreSQL is a strong choice because it supports structured data well and works reliably with relational game entities.
@@ -47,12 +51,17 @@ It is important for:
 - room synchronization
 - turn changes
 - penalty updates
+- Storm effect updates, including the shared random draw amount
+- hand-limit notifications and actual draw amounts when the 20-card limit applies
+- draw-pile reshuffle updates, including the addition of a new deck at the 25-card threshold
 - reconnect handling
+- spectator updates and finished-player state changes
 
 Socket.IO is especially useful in a multiplayer game because the server can push changes instantly to all connected players.
 
 ## Why this stack fits the project
 - **React + TypeScript** gives a structured and type-safe frontend
+- **i18n support** makes the interface available in English, Hungarian, and German
 - **Express** provides a simple and flexible backend layer
 - **PostgreSQL** stores persistent game data reliably
 - **Socket.IO** supports fast multiplayer interaction in real time

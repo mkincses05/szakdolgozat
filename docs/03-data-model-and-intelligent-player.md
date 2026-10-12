@@ -10,13 +10,17 @@ The data model should focus on players, rooms, sessions, turns, cards, and outco
 - id
 - displayName
 - connectionState
+- status (`active`, `finished`, `spectating`, or `disconnected`)
 - handSize
 - isBot
+- finishPosition
 
 #### Room
 - id
 - hostId
 - playerIds
+- minPlayers (2)
+- maxPlayers (8)
 - status
 - createdAt
 
@@ -25,8 +29,13 @@ The data model should focus on players, rooms, sessions, turns, cards, and outco
 - roomId
 - state
 - currentPlayerId
+- activePlayerIds
+- winnerId
+- finishingOrder
 - activeColor
 - activePenalty
+- maxHandSize (20)
+- reshuffleDeckThreshold (25)
 - startedAt
 - endedAt
 
@@ -49,6 +58,7 @@ The data model should focus on players, rooms, sessions, turns, cards, and outco
 - id
 - sessionId
 - winnerId
+- finishingOrder
 - finalState
 - summary
 
@@ -96,6 +106,7 @@ The intelligent player should be evaluated with repeatable and comparable metric
 - Compare it with a simple rule-based baseline
 - Record results per match and per turn
 - Analyze performance under different player counts
+- Analyze matches with 2–8 players and with finished players spectating
 
 ## 4. Data Needed for Evaluation
 - Match history
@@ -104,7 +115,11 @@ The intelligent player should be evaluated with repeatable and comparable metric
 - Available alternatives
 - Timing information
 - Final results
+- Finishing order and spectator/leave events
 - Penalty-chain handling outcomes
+- Storm draw amount and its effect on each active player
+- Requested and actual draw amounts after applying the 20-card hand limit
+- Reshuffle events and whether a new 104-card deck was added
 
 ## 5. Success Criteria
 
