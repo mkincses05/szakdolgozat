@@ -6,7 +6,7 @@ This project uses a TypeScript-based full-stack setup: a React frontend, a Node.
 
 - `backend/`: Express and Socket.IO server, game engine, persistence.
 - `frontend/` (planned): React application.
-- `shared/` (planned): types, event payload schemas, and rule constants used by both the backend and the frontend.
+- `shared/`: the `@wildhand/shared` ES module package used by both the backend and the frontend: card types, the 104-card deck definition, rule constants, error codes, client views, Socket.IO event names, typed event maps, and zod payload schemas. Build it with `npm run build` in `shared/` before the backend or frontend uses it.
 - `docs/`: technical documentation.
 
 The game engine is a pure TypeScript module without Socket.IO or database dependencies, so it can be tested directly and reused by the headless bot simulator (`docs/03`).
@@ -80,11 +80,11 @@ It is used for:
 
 ## Validation
 
-Every event payload is validated on the server with runtime schemas shared with the frontend (zod, planned), in addition to the game-rule validation in the engine.
+Every event payload is validated on the server with the zod schemas from `shared/`, in addition to the game-rule validation in the engine. The schemas check payload structure only (types, lengths, unique card IDs, Swap selection pairing); game-rule validation stays in the engine.
 
 ## Testing
 
-- **Vitest** (already configured in `backend/`) for engine, server, and protocol tests, including seeded randomized invariant tests.
+- **Vitest** (configured in `backend/` and `shared/`) for engine, server, and protocol tests, including seeded randomized invariant tests.
 - **Playwright** (planned) for end-to-end tests with multiple browser clients.
 
 ## Development Tooling

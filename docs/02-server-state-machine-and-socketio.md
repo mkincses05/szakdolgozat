@@ -43,7 +43,7 @@ A `finished` player who is `connected` is a spectator. A `disconnected` player s
 
 ## 2. Socket.IO Events
 
-Each client action carries an `actionId` (a client-generated UUID) and the `stateVersion` the client last received. The server answers every action with an acknowledgement: `{ ok: true }` or `{ ok: false, code }`, where `code` is a stable error key that the client translates with i18n.
+Each client action carries an `actionId` (a client-generated UUID); gameplay actions (`game:play`, `game:draw`) also carry the `stateVersion` the client last received. The server answers every action with an acknowledgement: `{ ok: true }` or `{ ok: false, code }`, where `code` is a stable error key that the client translates with i18n. The acknowledgement of `room:create`, `room:join`, and `session:resume` also contains `data` with the `userId`, the `roomCode`, and the `reconnectToken`. Event names, payload schemas, typed event maps, and error codes are defined in `shared/`.
 
 ### Client → server
 
