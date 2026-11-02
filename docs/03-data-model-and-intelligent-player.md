@@ -38,6 +38,8 @@ The runtime model is the authoritative in-memory state of the server.
 - `processedActionIds`: recently processed action IDs for duplicate detection
 - `seed`: seed of the random number generator
 - `finishingOrder`
+- `forfeitOrder`: forfeited players in forfeit order, for the ranking in R23
+- `endReason`: `last_player`, `blocked`, or `forfeits` once the match has ended
 - `startedAt`, `endedAt`
 
 #### MatchPlayer
