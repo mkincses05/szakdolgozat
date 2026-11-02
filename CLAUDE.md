@@ -36,6 +36,45 @@ Use an i18n solution for all user-facing text. It is forbidden to hardcode plain
 
 Translations cover the landing page, lobby, gameplay, spectator view, results, validation messages, status indicators, and connection messages.
 
+## Frontend conventions
+
+### No game logic in the frontend
+
+- The server decides everything about the game. The frontend displays the latest state received from the server and sends the player's intent as a Socket.IO action; the server validates every action.
+- Game logic is forbidden in the frontend: implementing or duplicating game rules, resolving card effects, computing draws, penalties, rankings, or turn order, and deciding whether an action is allowed or what it results in.
+- Rule-based hints in the interface, such as which cards are playable, which players can be targeted, which cards can join a combo, or what the draw button does, come only from the helpers in `@wildhand/shared` (`getLegalCards`, `getValidTargets`, `getComboPartners`, `getDrawOption`). If a hint is missing, add a helper to `shared/`; never reimplement a rule in the frontend.
+- Presentation calculations that do not affect the game are allowed, for example the countdown from `turnDeadline`, arranging players around the table, sorting, and formatting.
+- Local UI state is allowed, for example selected cards, open dialogs, hover and focus, and queued animations.
+- Local game state is forbidden. Do not change the hand, the top card, the current player, or any other game value before the server confirms it (no optimistic updates), and do not keep a separate copy of the match state; always render the latest `game:state`.
+
+### Technologies
+
+- React with TypeScript, built with Vite.
+- Tailwind CSS (version 4, through its Vite plugin) for all styling; `clsx` for conditional class names.
+- Define the card colors and other design tokens once in Tailwind's `@theme` and use them everywhere instead of ad hoc color values.
+- Custom CSS only for complex animations and visual effects that Tailwind utilities cannot express cleanly, such as dealing, playing, or shuffling cards. Put it in `frontend/src/styles/animations.css` and register the animations in `@theme`, so they can be used as utility classes.
+- `socket.io-client` for the connection, with one shared connection for the whole application.
+- i18next and react-i18next for translations.
+- Vitest, jsdom, and React Testing Library for tests.
+
+### Folder structure
+
+- Every page has its own folder in `frontend/src/pages/<page>/`, for example `landing`, `lobby`, `game`, and `results`.
+- A page folder contains the page component (`<Page>Page.tsx`), a `components/` folder for components used only on that page, a `hooks/` folder for hooks used only on that page, and a `locales/` folder with `en.json`, `hu.json`, and `de.json`.
+- New code starts in the folder of the page that uses it. Move a component or hook to `frontend/src/components/` or `frontend/src/hooks/` only when a second page starts using it.
+- Break pages down into small components and custom hooks:
+  - Components render the interface. Simple state that belongs to a single component, such as whether a menu is open, may stay in that component.
+  - Hooks hold all other state, the Socket.IO communication, timers, and other side effects.
+- Use one component per file, named in PascalCase (`PlayerHand.tsx`). Hooks are named `useSomething` in camelCase (`useTurnTimer.ts`).
+
+### Translation namespaces
+
+- The `common` namespace in `frontend/src/i18n/locales/` holds texts used on more than one page: shared buttons and labels, connection messages, and every server error code.
+- Every code in `ERROR_CODES` from `@wildhand/shared` has a translation under `errors.<code>` in the `common` namespace, for example `errors.room_full`.
+- Every page has its own namespace, named after its folder (`landing`, `lobby`, ...), with the translations in the page's `locales/` folder. They are collected automatically.
+- A component reads its page namespace with `useTranslation("<page>")` and common texts with the `common:` prefix, for example `t("common:errors.room_full")`.
+- Every language defines the same keys in every namespace. Keep this rule and the error-code rule covered by tests.
+
 ## Project facts
 
 Wildhand is a multiplayer card game with custom rules.

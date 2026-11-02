@@ -5,7 +5,7 @@ This project uses a TypeScript-based full-stack setup: a React frontend, a Node.
 ## Repository Structure
 
 - `backend/`: Express and Socket.IO server, game engine, persistence.
-- `frontend/` (planned): React application.
+- `frontend/`: React application built with Vite.
 - `shared/`: the `@wildhand/shared` ES module package used by both the backend and the frontend: card types, the 104-card deck definition, rule constants, the single-card legality rule (`isPlayableOn`, also used by the engine) with legal-play helpers that work on a player's own view, error codes, client views, Socket.IO event names, typed event maps, and zod payload schemas. Build it with `npm run build` in `shared/` before the backend or frontend uses it.
 - `docs/`: technical documentation.
 
@@ -37,11 +37,49 @@ In this project, React is used for:
 - the spectator view for players who have finished
 - the results view
 
-Planned tooling: Vite as the build tool and development server.
+Tooling: Vite as the build tool and development server, Tailwind CSS (version 4, through its Vite plugin) for styling, and `clsx` for conditional class names. The frontend connects to the backend with `socket.io-client`; the server URL comes from `VITE_SERVER_URL` (see `frontend/.env.example`). Card rules, event types, and payload schemas come from `@wildhand/shared`, so the frontend never duplicates them.
+
+### Responsibilities of the frontend
+
+The frontend is a presentation layer only; the server decides everything about the game (`docs/02`). The frontend renders the latest `room:state` and `game:state` received from the server and sends the player's intent as a Socket.IO action, which the server validates against the authoritative state.
+
+The frontend contains no game logic. It does not implement game rules, resolve card effects, compute draws, penalties, rankings, or turn order, or decide whether an action is allowed or what it results in. Rule-based hints in the interface, such as highlighting the playable cards, offering the valid Swap and Spy targets, building a combo, or labeling the draw button as draw, pass, or penalty, come from the helpers in `@wildhand/shared` (`getLegalCards`, `getValidTargets`, `getComboPartners`, `getDrawOption`). The engine uses the same single-card rule (`isPlayableOn`), so the hints always match the server's validation.
+
+Two kinds of local computation and state are allowed, because they do not affect the game:
+
+- presentation calculations, such as the countdown from `turnDeadline`, arranging the players around the table, sorting, and formatting;
+- interface state, such as the selected cards, open dialogs, hover and focus, and queued animations.
+
+Local game state is not allowed: the frontend never changes the hand, the top card, the current player, or any other game value before the server confirms it (no optimistic updates), and it keeps no separate copy of the match state. If the server rejects an action, for example with `stale_state`, the frontend shows the translated error code and waits for the next state.
+
+### Frontend structure
+
+```
+frontend/src/
+  pages/
+    <page>/                 landing, lobby, game, results
+      <Page>Page.tsx        page component
+      components/           components used only on this page
+      hooks/                hooks used only on this page
+      locales/              en.json, hu.json, de.json (page namespace)
+  components/               components used on more than one page
+  hooks/                    hooks used on more than one page, such as the Socket.IO connection
+  i18n/
+    index.ts                i18next setup
+    locales/                en.json, hu.json, de.json (common namespace)
+  styles/
+    animations.css          custom animations
+```
+
+New code starts in the folder of the page that uses it and moves to the shared `components/` or `hooks/` folder only when a second page starts using it. Pages are broken down into small components and custom hooks: components render the interface and may keep simple state that belongs to them alone, such as whether a menu is open; hooks hold all other state, the Socket.IO communication, timers, and other side effects.
+
+### Styling
+
+Tailwind CSS (version 4) provides all regular styling: layout, colors, spacing, and component states such as playable, selected, or disabled cards, with `clsx` for conditional class names. The card colors and other design tokens are defined once in Tailwind's `@theme`. Complex animations and visual effects that utilities cannot express cleanly, such as dealing, playing, or shuffling cards, are written as custom CSS in `frontend/src/styles/animations.css` and registered in `@theme`, so they are used as utility classes as well.
 
 ### Internationalization
 
-The frontend supports English, Hungarian, and German with react-i18next (planned). Translations cover all user-facing labels, validation messages, error codes returned by the server, status indicators, connection messages, spectator controls, and result screens. The server sends stable error codes, never translated text.
+The frontend supports English, Hungarian, and German with i18next and react-i18next, organized in namespaces. The `common` namespace (`frontend/src/i18n/locales/`) holds texts used on several pages: shared buttons and labels, connection messages, and a translation for every server error code under `errors.<code>`. Every page has its own namespace named after its folder, with the translations in the page's `locales/` folder; these files are collected automatically with Vite's `import.meta.glob`. A test checks that every language defines the same keys in every namespace; a second test, added together with the error translations, will check that every code in `ERROR_CODES` is translated. The language is detected from the browser and remembered locally. Translations cover all user-facing labels, validation messages, error codes returned by the server, status indicators, connection messages, spectator controls, and result screens. The server sends stable error codes, never translated text.
 
 ## Express
 
@@ -90,7 +128,7 @@ Every event payload is validated on the server with the zod schemas from `shared
 
 ## Testing
 
-- **Vitest** (configured in `backend/` and `shared/`) for engine, server, and protocol tests, including seeded randomized invariant tests.
+- **Vitest** (configured in `backend/`, `shared/`, and `frontend/`) for engine, server, and protocol tests, including seeded randomized invariant tests, and for frontend component tests with jsdom and React Testing Library.
 - **Playwright** (planned) for end-to-end tests with multiple browser clients.
 
 ## Development Tooling
@@ -98,7 +136,7 @@ Every event payload is validated on the server with the zod schemas from `shared
 - `tsx` for running the TypeScript backend in development.
 - `tsc` for building the backend.
 - `dotenv` for local configuration, with `backend/.env.example` as the template.
-- **GitHub Actions** (`.github/workflows/ci.yml`) runs on every push to `main` and `develop` and on every pull request to them: it installs, typechecks, tests, and builds `shared/` first and then `backend/`, including the simulator in `backend/tools/`.
+- **GitHub Actions** (`.github/workflows/ci.yml`) runs on every push to `main` and `develop` and on every pull request to them: it installs, typechecks, tests, and builds `shared/` first and then `backend/`, including the simulator in `backend/tools/`, and `frontend/`.
 
 ## Why This Stack Fits the Project
 
