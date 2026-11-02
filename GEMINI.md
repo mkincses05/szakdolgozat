@@ -2,18 +2,27 @@
 
 ## Git conventions
 
-- Branch names must use `feature/` or `hotfix/`.
+- Branch names must use `feature/`, `hotfix/`, or `chore/`, matching the commit type: `feature/` for `feat`, `hotfix/` for `fix`, and `chore/` for `chore`.
 - After the prefix, use a short branch name with words separated by hyphens.
 - Branch names may contain only lowercase, unaccented ASCII letters, numbers, and hyphens.
-- Commit messages must use `feat: short description` or `fix: short description`.
+- Commit messages must use `feat: short description`, `fix: short description`, or `chore: short description`.
+- Use `feat` for new functionality, `fix` for bug fixes, and `chore` for maintenance that does not change application behavior, such as CI, tooling, dependency, or configuration changes.
 - Commit descriptions use spaces between words and should be short and clear.
 
 Examples:
 
 - `feature/add-game-room`
 - `hotfix/fix-card-limit`
+- `chore/add-ci-workflow`
 - `feat: add game room`
 - `fix: enforce card limit`
+- `chore: add ci workflow`
+
+## Git operations
+
+- Ask the user for confirmation before every Git operation that changes the repository or the remote, for example `git add`, `git commit`, `git push`, `git merge`, `git rebase`, `git reset`, and creating, switching, or deleting branches.
+- Read-only commands, such as `git status`, `git diff`, and `git log`, need no confirmation.
+- A confirmation applies only to the operation it was given for; ask again for the next one.
 
 ## Internationalization
 
