@@ -1,0 +1,11 @@
+/*
+ * Custom animations and visual effects that Tailwind utilities cannot express cleanly,
+ * such as dealing, playing, and shuffling cards. Register an animation in `@theme` to use it
+ * as a utility class, for example:
+ *
+ *   @theme {
+ *     --animate-deal: deal 300ms ease-out;
+ *   }
+ *
+ *   @keyframes deal { ... }
+ */

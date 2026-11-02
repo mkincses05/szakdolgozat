@@ -26,8 +26,9 @@ jobs:
           cache-dependency-path: |
             shared/package-lock.json
             backend/package-lock.json
+            frontend/package-lock.json
 
-      # The backend uses the built shared package (`file:../shared`), so shared goes first.
+      # The backend and the frontend use the built shared package (`file:../shared`), so shared goes first.
       - name: Shared - install
         working-directory: shared
         run: npm ci
@@ -61,3 +62,19 @@ jobs:
       - name: Backend - build
         working-directory: backend
         run: npm run build
+
+      - name: Frontend - install
+        working-directory: frontend
+        run: npm ci
+
+      - name: Frontend - typecheck
+        working-directory: frontend
+        run: npm run typecheck
+
+      - name: Frontend - test
+        working-directory: frontend
+        run: npm test
+
+      - name: Frontend - build
+        working-directory: frontend
+        run: npx vite build

@@ -7,6 +7,10 @@ build/
 *.tsbuildinfo
 .vite/
 
+# Vite
+*.local
+vite.config.*.timestamp-*
+
 # Test coverage
 coverage/
 
