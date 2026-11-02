@@ -18,6 +18,8 @@ import { findPlayer, validTargets, type EngineResult, type MatchState, type Play
 import { toMatchView } from "../../src/engine/views.js";
 
 const MAX_ACTIONS = 20_000;
+/** A simulation takes about 2 s; the default 5 s limit is too tight when the machine is busy. */
+const SIMULATION_TIMEOUT_MS = 30_000;
 
 function pick<T>(items: readonly T[], rng: Rng): T {
   return items[rng.nextInt(0, items.length - 1)];
@@ -179,7 +181,7 @@ function simulate(seed: number, playerCount: number): { state: MatchState; actio
   return { state, actions };
 }
 
-describe("seeded randomized simulation", () => {
+describe("seeded randomized simulation", { timeout: SIMULATION_TIMEOUT_MS }, () => {
   for (let playerCount = 2; playerCount <= 8; playerCount++) {
     it(`keeps every invariant and always ends with ${playerCount} players`, () => {
       for (let seed = 1; seed <= 10; seed++) {
