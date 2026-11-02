@@ -98,6 +98,7 @@ Every event payload is validated on the server with the zod schemas from `shared
 - `tsx` for running the TypeScript backend in development.
 - `tsc` for building the backend.
 - `dotenv` for local configuration, with `backend/.env.example` as the template.
+- **GitHub Actions** (`.github/workflows/ci.yml`) runs on every push to `main` and `develop` and on every pull request to them: it installs, typechecks, tests, and builds `shared/` first and then `backend/`, including the simulator in `backend/tools/`.
 
 ## Why This Stack Fits the Project
 

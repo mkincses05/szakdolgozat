@@ -1,0 +1,63 @@
+name: CI
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: |
+            shared/package-lock.json
+            backend/package-lock.json
+
+      # The backend uses the built shared package (`file:../shared`), so shared goes first.
+      - name: Shared - install
+        working-directory: shared
+        run: npm ci
+
+      - name: Shared - typecheck
+        working-directory: shared
+        run: npm run typecheck
+
+      - name: Shared - test
+        working-directory: shared
+        run: npm test
+
+      - name: Shared - build
+        working-directory: shared
+        run: npm run build
+
+      - name: Backend - install
+        working-directory: backend
+        run: npm ci
+
+      - name: Backend - typecheck
+        working-directory: backend
+        run: |
+          npm run typecheck
+          npx tsc -p tools/simulate/tsconfig.json
+
+      - name: Backend - test
+        working-directory: backend
+        run: npm test
+
+      - name: Backend - build
+        working-directory: backend
+        run: npm run build
