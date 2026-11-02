@@ -49,8 +49,8 @@ Each client action carries an `actionId` (a client-generated UUID); gameplay act
 
 | Event | Payload | Notes |
 | --- | --- | --- |
-| `room:create` | `displayName` | Creates a room; the creator is the host. |
-| `room:join` | `roomCode`, `displayName` | Rejected when the room is full (R1) or in a match. |
+| `room:create` | `displayName` | Creates a room; the creator is the host. Rejected with `already_in_room` when the connection already has a session. |
+| `room:join` | `roomCode`, `displayName` | Rejected when the room is full (R1), in a match, or the connection already has a session (`already_in_room`). |
 | `room:leave` | — | Triggers host transfer (R24) or a forfeit (R23). |
 | `room:start` | — | Host only; requires 2–8 members. |
 | `game:play` | `cardIds[]`, `chosenColor?`, `targetPlayerId?`, `swapCardId?`, `targetCardPosition?` | One special card or a number combo (R8, R9). For Swap, `swapCardId` is the acting player's card and `targetCardPosition` is the blindly picked face-down position (R12). |
@@ -68,9 +68,11 @@ Each client action carries an `actionId` (a client-generated UUID); gameplay act
 | `game:swapResult` | Swap participants only | The card each participant received (R12). |
 | `game:ended` | All players | Winner, finishing order, forfeits, blocked-game ranking. |
 
+After every accepted action the server sends the `game:effect` events first, then `game:spyReveal` or `game:swapResult` to their recipients, then each member's personal `game:state`, and finally `game:ended` if the match has ended. When the match ends, the room returns to `lobby`; the ended match and its results stay available to members who reconnect until the next match starts. A member who resumes a session receives `room:state` and, if there is a match, `game:state` (and `game:ended`) immediately.
+
 ### Duplicate and out-of-order actions
 
-- An action whose `actionId` has already been processed returns the original acknowledgement without changing the state.
+- An action whose `actionId` has already been processed returns the original acknowledgement without changing the state. Acknowledgements are remembered per session for the most recent 100 actions; `room:create` and `room:join`, which are sent before a session exists, are remembered per connection.
 - An action whose `stateVersion` is not the current version is rejected with `stale_state`.
 - Each accepted action increments `stateVersion` exactly once.
 - Actions for one match are processed sequentially, so concurrent actions cannot interleave.
@@ -90,7 +92,7 @@ All values are configurable; the defaults are:
 | Timer | Default | On expiry |
 | --- | ---: | --- |
 | Turn timer | 60 s | Draw the pending +2 penalty, otherwise draw one card or pass (R22). |
-| Reconnect grace period | 60 s | The player forfeits (R23). |
+| Reconnect grace period | 60 s | In a running match, an active player forfeits (R23). In the lobby, and for finished players, the member leaves the room. The token can no longer be used (`session_expired`). |
 
 Timer expiry is processed as a server-generated action with the same validation, versioning, and sequential processing as client actions; it is equivalent to a `game:draw` from the current player, except that a player with 20 cards passes even if they hold a legal card (R22). When a disconnected player faces a pending +2 penalty, the server draws it for them in the same way (R10).
 

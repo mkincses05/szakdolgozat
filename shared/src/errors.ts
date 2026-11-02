@@ -13,6 +13,7 @@ export const ERROR_CODES = [
   "room_full",
   "room_in_match",
   "not_in_room",
+  "already_in_room",
   "not_host",
   "not_enough_players",
   "too_many_players",
