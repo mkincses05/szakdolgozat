@@ -2,12 +2,20 @@
 // legal actions; it is a test helper, not a bot.
 
 import { describe, expect, it } from "vitest";
-import { CARD_COLORS, DECK_SIZE, HAND_LIMIT, isNumberCard } from "@wildhand/shared";
+import {
+  CARD_COLORS,
+  DECK_SIZE,
+  HAND_LIMIT,
+  getLegalCards,
+  isNumberCard,
+  type PlayerMatchView
+} from "@wildhand/shared";
 import { applyDraw, applyForfeit, applyPlay, applyTimeout, setPresence } from "../../src/engine/actions.js";
 import { isLegalCard } from "../../src/engine/legality.js";
 import { createSeededRng, type Rng } from "../../src/engine/rng.js";
 import { createMatch } from "../../src/engine/setup.js";
 import { findPlayer, validTargets, type EngineResult, type MatchState, type PlayAction } from "../../src/engine/state.js";
+import { toMatchView } from "../../src/engine/views.js";
 
 const MAX_ACTIONS = 20_000;
 
@@ -128,6 +136,15 @@ function checkInvariants(before: MatchState, result: EngineResult): void {
         expect(findPlayer(before, draw.userId)!.matchStatus).toBe("active");
       }
     }
+  }
+
+  // The legal cards computed by clients from their own view match the engine's.
+  if (state.currentPlayerId !== null) {
+    const view = toMatchView(state, state.currentPlayerId, { displayName: (id) => id, turnDeadline: null });
+    const engineLegal = findPlayer(state, state.currentPlayerId)!.hand.filter((card) =>
+      isLegalCard(card, state, state.currentPlayerId!)
+    );
+    expect(getLegalCards(view as PlayerMatchView)).toEqual(engineLegal);
   }
 
   if (state.phase === "ended") {

@@ -3,6 +3,7 @@ export * from "./constants.js";
 export * from "./effects.js";
 export * from "./errors.js";
 export * from "./events.js";
+export * from "./legality.js";
 export * from "./results.js";
 export * from "./schemas.js";
 export * from "./status.js";

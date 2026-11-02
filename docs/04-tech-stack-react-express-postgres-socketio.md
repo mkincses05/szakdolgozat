@@ -6,7 +6,7 @@ This project uses a TypeScript-based full-stack setup: a React frontend, a Node.
 
 - `backend/`: Express and Socket.IO server, game engine, persistence.
 - `frontend/` (planned): React application.
-- `shared/`: the `@wildhand/shared` ES module package used by both the backend and the frontend: card types, the 104-card deck definition, rule constants, error codes, client views, Socket.IO event names, typed event maps, and zod payload schemas. Build it with `npm run build` in `shared/` before the backend or frontend uses it.
+- `shared/`: the `@wildhand/shared` ES module package used by both the backend and the frontend: card types, the 104-card deck definition, rule constants, the single-card legality rule (`isPlayableOn`, also used by the engine) with legal-play helpers that work on a player's own view, error codes, client views, Socket.IO event names, typed event maps, and zod payload schemas. Build it with `npm run build` in `shared/` before the backend or frontend uses it.
 - `docs/`: technical documentation.
 
 The game engine (`backend/src/engine/`) is a pure TypeScript module without Socket.IO or database dependencies, so it can be tested directly and reused by the headless bot simulator (`docs/03`). Every action takes the current match state and an injectable random number generator, and returns either a new state with the public effects and the private events, or an error code without changing the state. Its tests are in `backend/test/engine/`.
