@@ -33,11 +33,13 @@ The runtime model is the authoritative in-memory state of the server.
 - `activeColor`: the color chosen by Color Change; cleared when the next card is played on it (R6)
 - `pendingPenalty`: accumulated +2 penalty, 0 when none is active
 - `decksInPlay`: number of 104-card decks used so far
-- `turnDeadline`
+- `turnDeadline` (kept by the match controller with the turn timer, not by the engine)
 - `stateVersion`
-- `processedActionIds`: recently processed action IDs for duplicate detection
-- `seed`: seed of the random number generator
+- `processedActionIds`: recently processed action IDs for duplicate detection, stored per player session together with their acknowledgements
+- `seed`: seed of the random number generator, kept by the match controller
 - `finishingOrder`
+- `forfeitOrder`: forfeited players in forfeit order, for the ranking in R23
+- `endReason`: `last_player`, `blocked`, or `forfeits` once the match has ended
 - `startedAt`, `endedAt`
 
 #### MatchPlayer

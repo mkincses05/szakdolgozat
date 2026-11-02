@@ -6,10 +6,17 @@ This project uses a TypeScript-based full-stack setup: a React frontend, a Node.
 
 - `backend/`: Express and Socket.IO server, game engine, persistence.
 - `frontend/` (planned): React application.
-- `shared/` (planned): types, event payload schemas, and rule constants used by both the backend and the frontend.
+- `shared/`: the `@wildhand/shared` ES module package used by both the backend and the frontend: card types, the 104-card deck definition, rule constants, the single-card legality rule (`isPlayableOn`, also used by the engine) with legal-play helpers that work on a player's own view, error codes, client views, Socket.IO event names, typed event maps, and zod payload schemas. Build it with `npm run build` in `shared/` before the backend or frontend uses it.
 - `docs/`: technical documentation.
 
-The game engine is a pure TypeScript module without Socket.IO or database dependencies, so it can be tested directly and reused by the headless bot simulator (`docs/03`).
+The game engine (`backend/src/engine/`) is a pure TypeScript module without Socket.IO or database dependencies, so it can be tested directly and reused by the headless bot simulator (`docs/03`). Every action takes the current match state and an injectable random number generator, and returns either a new state with the public effects and the private events, or an error code without changing the state. Its tests are in `backend/test/engine/`.
+
+Around the engine, the backend has two more layers:
+
+- `backend/src/game/`: the room service (rooms, sessions, host transfer, reconnect grace periods, duplicate and stale actions) and the match controller (seed, turn timer, delivery of effects, private events, and personal views). It has no Socket.IO dependency; time comes from an injectable scheduler, and messages leave through a transport interface addressed to single users.
+- `backend/src/socket/`: the Socket.IO handlers, which validate payloads with the shared zod schemas, answer with acknowledgements, and route each message to the socket of its user.
+
+The server is configured with `PORT`, `CORS_ORIGIN`, `TURN_TIMEOUT_MS`, and `RECONNECT_GRACE_MS` (see `backend/.env.example`).
 
 ## React + TypeScript
 
@@ -42,8 +49,7 @@ Express (version 5) is the backend web framework. It handles HTTP requests, rout
 
 In this project, Express is used for:
 
-- creating rooms and issuing guest identities with reconnect tokens
-- serving match history and statistics
+- serving match history and statistics (planned)
 - health checks
 - hosting the Socket.IO server on the same HTTP server
 
@@ -80,11 +86,11 @@ It is used for:
 
 ## Validation
 
-Every event payload is validated on the server with runtime schemas shared with the frontend (zod, planned), in addition to the game-rule validation in the engine.
+Every event payload is validated on the server with the zod schemas from `shared/`, in addition to the game-rule validation in the engine. The schemas check payload structure only (types, lengths, unique card IDs, Swap selection pairing); game-rule validation stays in the engine.
 
 ## Testing
 
-- **Vitest** (already configured in `backend/`) for engine, server, and protocol tests, including seeded randomized invariant tests.
+- **Vitest** (configured in `backend/` and `shared/`) for engine, server, and protocol tests, including seeded randomized invariant tests.
 - **Playwright** (planned) for end-to-end tests with multiple browser clients.
 
 ## Development Tooling

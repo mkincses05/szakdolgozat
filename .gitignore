@@ -1,3 +1,32 @@
+# Dependencies
 node_modules/
+
+# Build output
 dist/
+build/
+*.tsbuildinfo
+.vite/
+
+# Test coverage
+coverage/
+
+# Environment variables (keep the examples)
 .env
+.env.*
+!.env.example
+
+# Logs
+*.log
+npm-debug.log*
+
+# Editors and tools
+.idea/
+.vscode/*
+!.vscode/settings.json
+!.vscode/extensions.json
+.claude/settings.local.json
+
+# Operating system files
+.DS_Store
+Thumbs.db
+desktop.ini
