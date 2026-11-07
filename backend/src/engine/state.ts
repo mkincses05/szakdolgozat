@@ -1,6 +1,7 @@
 // Authoritative runtime match state (docs/03, section 1). Room state, timers, and duplicate
 // detection belong to the match service; the engine only knows the match itself.
 
+import { isValidTarget } from "@wildhand/shared";
 import type {
   Card,
   CardColor,
@@ -84,7 +85,5 @@ export function activePlayers(state: MatchState): MatchPlayer[] {
 
 /** Active, connected players other than the actor: valid Swap and Spy targets (R12, R14, R23). */
 export function validTargets(state: MatchState, actorId: string): MatchPlayer[] {
-  return state.players.filter(
-    (player) => player.userId !== actorId && player.matchStatus === "active" && player.presence === "connected"
-  );
+  return state.players.filter((player) => isValidTarget(player, actorId));
 }

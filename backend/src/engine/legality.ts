@@ -1,30 +1,25 @@
-// Legal plays (R4–R9). The single-card rule is shared with the clients (`isPlayableOn`).
+// Legal plays (R4–R9). The rules are the shared predicates the clients use for their hints
+// (`isPlayableOn`, `isCardLegal`), applied to the authoritative state.
 
-import { isPlayableOn, type Card } from "@wildhand/shared";
+import { isCardLegal, isPlayableOn, type Card } from "@wildhand/shared";
 import { topCard, validTargets, type MatchPlayer, type MatchState } from "./state.js";
+
+function playableContext(state: MatchState) {
+  return { topCard: topCard(state), activeColor: state.activeColor, pendingPenalty: state.pendingPenalty };
+}
 
 /** Whether a single card may be played on the current top card, ignoring Swap and Spy targets. */
 export function isPlayable(card: Card, state: MatchState): boolean {
-  return isPlayableOn(card, {
-    topCard: topCard(state),
-    activeColor: state.activeColor,
-    pendingPenalty: state.pendingPenalty
-  });
+  return isPlayableOn(card, playableContext(state));
 }
 
 /** Whether a card can be played now, including the Swap and Spy target requirement (R9). */
 export function isLegalCard(card: Card, state: MatchState, actorId: string): boolean {
-  if (!isPlayable(card, state)) {
-    return false;
-  }
-
-  if (card.kind === "swap" || card.kind === "spy") {
-    return validTargets(state, actorId).length > 0;
-  }
-
-  return true;
+  return isCardLegal(card, playableContext(state), validTargets(state, actorId).length > 0);
 }
 
 export function hasLegalCard(state: MatchState, player: MatchPlayer): boolean {
-  return player.hand.some((card) => isLegalCard(card, state, player.userId));
+  const context = playableContext(state);
+  const hasTarget = validTargets(state, player.userId).length > 0;
+  return player.hand.some((card) => isCardLegal(card, context, hasTarget));
 }

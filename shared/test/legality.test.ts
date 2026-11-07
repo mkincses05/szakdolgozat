@@ -1,11 +1,14 @@
 import { describe, expect, it } from "vitest";
 import {
+  drawOptionFor,
   getComboPartners,
   getDrawOption,
   getLegalCards,
   getSwapOffers,
   getValidTargets,
+  isCardLegal,
   isPlayableOn,
+  isValidTarget,
   type Card,
   type CardColor,
   type CardNumber,
@@ -111,6 +114,31 @@ describe("getValidTargets", () => {
       playerView("p3", { matchStatus: "forfeited", presence: "left" })
     ];
     expect(getValidTargets(view([], { players })).map((player) => player.userId)).toEqual(["p1"]);
+  });
+});
+
+describe("shared rule predicates", () => {
+  it("isValidTarget: another active, connected player (R12, R14, R23)", () => {
+    expect(isValidTarget(playerView("p1"), "p0")).toBe(true);
+    expect(isValidTarget(playerView("p0"), "p0")).toBe(false);
+    expect(isValidTarget(playerView("p1", { presence: "disconnected" }), "p0")).toBe(false);
+    expect(isValidTarget(playerView("p1", { matchStatus: "finished" }), "p0")).toBe(false);
+  });
+
+  it("isCardLegal: Swap and Spy need a target (R9)", () => {
+    const context = { topCard: num("red", 5), activeColor: null, pendingPenalty: 0 };
+    expect(isCardLegal(wild("spy"), context, true)).toBe(true);
+    expect(isCardLegal(wild("spy"), context, false)).toBe(false);
+    expect(isCardLegal(special("swap", "red"), context, false)).toBe(false);
+    expect(isCardLegal(num("red", 3), context, false)).toBe(true);
+    expect(isCardLegal(num("blue", 3), context, true)).toBe(false);
+  });
+
+  it("drawOptionFor: penalty, draw, pass, or must play (R10, R15, R17)", () => {
+    expect(drawOptionFor({ pendingPenalty: 2, handSize: 20, hasLegalCard: true })).toBe("penalty");
+    expect(drawOptionFor({ pendingPenalty: 0, handSize: 19, hasLegalCard: true })).toBe("draw");
+    expect(drawOptionFor({ pendingPenalty: 0, handSize: 20, hasLegalCard: false })).toBe("pass");
+    expect(drawOptionFor({ pendingPenalty: 0, handSize: 20, hasLegalCard: true })).toBeNull();
   });
 });
 

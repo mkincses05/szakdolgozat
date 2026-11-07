@@ -13,10 +13,12 @@ import {
   getMatchResults,
   setPresence,
   toMatchView,
+  toPublicMatchView,
   type EngineResult,
   type MatchState,
   type PlayAction,
-  type Rng
+  type Rng,
+  type ViewContext
 } from "../engine/index.js";
 import type { Logger } from "../logger.js";
 import type { Scheduler, TimerHandle } from "../scheduler.js";
@@ -182,17 +184,24 @@ export class MatchController {
   }
 
   private broadcastState(): void {
+    // The public part is the same for everyone; only the viewer's own hand differs (R25).
+    const context = this.viewContext();
+    const publicView = toPublicMatchView(this.state, context);
     for (const userId of this.options.recipients()) {
-      this.options.transport.send(userId, "game:state", this.viewFor(userId));
+      this.options.transport.send(userId, "game:state", toMatchView(this.state, userId, context, publicView));
     }
   }
 
   private viewFor(userId: string) {
-    return toMatchView(this.state, userId, {
+    return toMatchView(this.state, userId, this.viewContext());
+  }
+
+  private viewContext(): ViewContext {
+    return {
       displayName: (playerId) => this.displayNames.get(playerId) ?? playerId,
       turnDeadline: this.turnDeadline,
       serverTime: this.options.scheduler.now()
-    });
+    };
   }
 
   /** R22: every turn has a time limit; no timer runs while no one has the turn. */

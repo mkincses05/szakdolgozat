@@ -43,8 +43,13 @@ export function toPublicMatchView(state: MatchState, context: ViewContext): Publ
  * Personal view for an active or finished match player; a spectator view for everyone else,
  * including forfeited players and room members outside the match.
  */
-export function toMatchView(state: MatchState, viewerId: string | null, context: ViewContext): MatchView {
-  const publicView = toPublicMatchView(state, context);
+export function toMatchView(
+  state: MatchState,
+  viewerId: string | null,
+  context: ViewContext,
+  /** Pass the result of `toPublicMatchView` when building views for several viewers at once. */
+  publicView: PublicMatchView = toPublicMatchView(state, context)
+): MatchView {
   const viewer = viewerId === null ? undefined : findPlayer(state, viewerId);
 
   if (!viewer || viewer.matchStatus === "forfeited") {
