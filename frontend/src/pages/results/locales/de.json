@@ -1,1 +1,15 @@
-{ "title": "Ergebnisse" }
+{
+  "title": "Ergebnisse",
+  "winner": "Gewinner: {{name}}",
+  "endReason": {
+    "last_player": "Das Spiel ist beendet, weil nur noch ein aktiver Spieler übrig war.",
+    "blocked": "Das Spiel ist beendet, weil alle verbliebenen Spieler 20 Karten hatten und niemand spielen konnte. Sie teilen sich den nächsten Platz.",
+    "forfeits": "Das Spiel ist beendet, weil Spieler aufgegeben haben."
+  },
+  "standings": "Endstand",
+  "place": "{{position}}. {{name}}",
+  "you": "du",
+  "forfeited": "aufgegeben",
+  "backToLobby": "Zurück zur Lobby",
+  "leave": "Raum verlassen"
+}

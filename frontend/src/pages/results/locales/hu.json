@@ -1,1 +1,15 @@
-{ "title": "Eredmények" }
+{
+  "title": "Eredmények",
+  "winner": "Győztes: {{name}}",
+  "endReason": {
+    "last_player": "A meccs véget ért, mert csak egy aktív játékos maradt.",
+    "blocked": "A meccs véget ért, mert minden megmaradt játékosnál 20 lap volt, és senki nem tudott lapot kijátszani. Ők közösen kapják a következő helyezést.",
+    "forfeits": "A meccs véget ért, mert játékosok feladták."
+  },
+  "standings": "Végeredmény",
+  "place": "{{position}}. {{name}}",
+  "you": "te",
+  "forfeited": "feladta",
+  "backToLobby": "Vissza a váróterembe",
+  "leave": "Kilépés a szobából"
+}

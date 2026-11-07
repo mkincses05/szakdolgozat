@@ -1,1 +1,15 @@
-{ "title": "Results" }
+{
+  "title": "Results",
+  "winner": "Winner: {{name}}",
+  "endReason": {
+    "last_player": "The match ended because only one active player remained.",
+    "blocked": "The match ended because every remaining player held 20 cards and none could play. They share the next position.",
+    "forfeits": "The match ended because players forfeited."
+  },
+  "standings": "Final standings",
+  "place": "{{position}}. {{name}}",
+  "you": "you",
+  "forfeited": "forfeited",
+  "backToLobby": "Back to the lobby",
+  "leave": "Leave room"
+}
