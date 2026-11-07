@@ -1,1 +1,12 @@
-{ "tagline": "A multiplayer card game" }
+{
+  "tagline": "A multiplayer card game",
+  "language": "Language",
+  "displayName": "Your name",
+  "createRoom": "Create room",
+  "roomCode": "Room code",
+  "joinRoom": "Join room",
+  "validation": {
+    "displayName": "Your name must be {{min}}–{{max}} characters long.",
+    "roomCode": "The room code consists of {{length}} letters or digits."
+  }
+}

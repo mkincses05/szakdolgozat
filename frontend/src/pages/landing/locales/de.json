@@ -1,1 +1,12 @@
-{ "tagline": "Ein Kartenspiel für mehrere Spieler" }
+{
+  "tagline": "Ein Kartenspiel für mehrere Spieler",
+  "language": "Sprache",
+  "displayName": "Dein Name",
+  "createRoom": "Raum erstellen",
+  "roomCode": "Raumcode",
+  "joinRoom": "Raum beitreten",
+  "validation": {
+    "displayName": "Dein Name muss {{min}}–{{max}} Zeichen lang sein.",
+    "roomCode": "Der Raumcode besteht aus {{length}} Buchstaben oder Ziffern."
+  }
+}

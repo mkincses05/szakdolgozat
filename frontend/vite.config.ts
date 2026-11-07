@@ -14,6 +14,9 @@ export default defineConfig({
   },
   test: {
     environment: "jsdom",
+    // The cached `i18n/index.ts` keeps an outdated `import.meta.glob` result when a page adds
+    // translation files, so new namespaces would be missing from the tests.
+    fsModuleCache: false,
     globals: true,
     setupFiles: ["./src/test/setup.ts"]
   }

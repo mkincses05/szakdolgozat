@@ -1,6 +1,15 @@
 {
-  "app": { "title": "Wildhand" },
-  "status": { "loading": "Wird geladen…" },
+  "app": {
+    "title": "Wildhand"
+  },
+  "languages": {
+    "en": "English",
+    "hu": "Magyar",
+    "de": "Deutsch"
+  },
+  "status": {
+    "loading": "Wird geladen…"
+  },
   "connection": {
     "connecting": "Verbindung zum Server wird hergestellt…",
     "connected": "Mit dem Server verbunden",
