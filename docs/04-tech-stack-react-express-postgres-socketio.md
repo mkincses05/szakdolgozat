@@ -99,7 +99,8 @@ Express (version 5) is the backend web framework. It handles HTTP requests, rout
 
 In this project, Express is used for:
 
-- serving match history and statistics (planned)
+- registration, login, and logout (planned)
+- serving profiles and statistics (planned)
 - health checks
 - hosting the Socket.IO server on the same HTTP server
 
@@ -109,13 +110,16 @@ PostgreSQL is the relational database used for persistent storage. The schema is
 
 It stores:
 
-- guest users
-- rooms
-- matches and their players
-- the action log of every match
-- finishing order, forfeits, and statistics
+- registered user accounts with their XP and profile counters
+- password hashes and login sessions
+- a prunable statistics log of finished matches and their players
 
-The live match state is kept in server memory; PostgreSQL stores the action log and the final results.
+Rooms, the live match state, guests, bots, and reconnect tokens are kept in server memory. The database is optional: without it, the server runs matches and stores nothing.
+
+- PostgreSQL runs in Docker for development, defined in a docker-compose file in the repository.
+- The backend uses the `pg` client with hand-written SQL, without an ORM.
+- Schema changes are plain SQL migrations applied by a small runner that records them in `schema_migrations`.
+- Passwords are hashed with argon2id.
 
 ## Socket.IO
 
@@ -155,7 +159,7 @@ Every event payload is validated on the server with the zod schemas from `shared
 - **React + TypeScript** gives a structured and type-safe frontend.
 - **i18n support** makes the interface available in English, Hungarian, and German.
 - **Express** provides a simple and flexible backend layer.
-- **PostgreSQL** stores match history and action logs reliably.
+- **PostgreSQL** stores user accounts, XP, and match statistics reliably.
 - **Socket.IO** supports fast multiplayer interaction with per-player messages.
 - **Shared TypeScript types** keep the client and the server protocol consistent.
 

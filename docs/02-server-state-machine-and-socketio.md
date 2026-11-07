@@ -111,13 +111,13 @@ Timer expiry is processed as a server-generated action with the same validation,
 
 ## 6. Turn Resolution
 
-The server applies the turn resolution contract from `docs/01` (section 6) atomically. Random values (shuffles, Storm values, the Swap position permutation) come from an injectable, seedable random number generator. Each value is selected exactly once and recorded in the action log, so a match can be replayed deterministically.
+The server applies the turn resolution contract from `docs/01` (section 6) atomically. Random values (shuffles, Storm values, the Swap position permutation) come from an injectable, seedable random number generator. Each value is selected exactly once, so the same seed and the same actions always produce the same match. Live matches store only their seed and result (`docs/03`); the headless simulator records the actions of its matches, so simulated matches can be replayed.
 
 ## 7. Implementation Notes
 
 - Keep state transitions in one match service; the engine is a pure function from state and action to the new state and the events to send.
 - Use typed and validated event payloads shared between the client and the server.
-- Keep the live match state in memory and append every accepted action to the PostgreSQL action log (`docs/03`).
+- Keep the live match state in memory; when the match ends, write its result to PostgreSQL in one transaction (`docs/03`). Accepted actions are not stored.
 - Log rejected actions with their error code for debugging and balancing.
 
 ## 8. Risks

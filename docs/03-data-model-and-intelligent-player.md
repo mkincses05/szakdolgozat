@@ -55,17 +55,52 @@ The hand limit (20) and the reshuffle threshold (25) are rule constants, not sto
 
 ## 2. Persistent Data Model (PostgreSQL)
 
+PostgreSQL stores registered user accounts and a statistics log of finished matches. Everything else stays in server memory: rooms, the live match state, guest and bot identities, and the reconnect token. Persistence is optional: without a configured database the server still runs matches and stores nothing.
+
+### Principles
+
+- Players can join as guests or as registered users who log in. Only registered users have a database row, and only they earn XP. Guests and bots exist only in server memory.
+- The `users` row is the single source of truth for a user's XP and profile counters. They are updated when a match ends and are never computed from the match log.
+- The level is not stored; a function in `shared/` derives it from the XP.
+- `matches` and `match_players` are a statistics log only. Nothing is computed from them, and they may be pruned or archived at any time without affecting any user.
+- Moves are not stored. The data for the bot evaluation (sections 4–5) is recorded by the headless simulator in its own output files, not in PostgreSQL.
+
+### Tables
+
 | Table | Content |
 | --- | --- |
-| `users` | Guest identity: ID, display name, reconnect token hash, creation time |
-| `rooms` | Room ID, code, host, creation time, close time |
-| `matches` | Match ID, room ID, seed, player count, start and end time, end reason (`last_player`, `blocked`, `forfeits`) |
-| `match_players` | Match ID, user ID, seat, final status, finish position, whether the player was a bot |
-| `match_actions` | Match ID, sequence number, player ID, action type, payload, random values selected, timestamp |
+| `users` | Registered users: ID (UUID), username and email (both required, unique case-insensitively), display name, `xp`, `matches_played`, `wins`, `forfeits`, creation time, last-seen time |
+| `user_credentials` | User ID, argon2id password hash, update time |
+| `auth_sessions` | ID, user ID, SHA-256 hash of the login token, creation, last-use, and expiry time |
+| `matches` | Match ID, seed, player count (2–8), turn time limit, start and end time, end reason (`last_player`, `blocked`, `forfeits`, or `aborted`), winner seat (empty when there is no winner) |
+| `match_players` | Match ID, seat, player kind (`guest`, `registered`, or `bot`), user ID (registered players only), bot level (bots only), display name at match time, final status, finish position, XP earned |
+| `schema_migrations` | Applied migration versions with their application time |
 
-Players join as guests with a display name. The server issues a reconnect token that identifies the player after a disconnect. User registration is not part of the current scope.
+### Constraints
 
-The `match_actions` log together with the seed allows every match to be replayed, which supports debugging and the bot evaluation in section 4.
+- The XP and counter columns of `users` cannot be negative, and `wins + forfeits` cannot exceed `matches_played`.
+- The primary key of `match_players` is the match ID and the seat. A user appears at most once per match, and several players can share a finish position after a blocked game (R21).
+- Only registered players have a user ID and earned XP in `match_players`; only bots have a bot level.
+- Deleting a match deletes its `match_players` rows. Deleting a user sets the user ID to empty in the log and deletes the user's credentials and sessions. Neither deletion changes any other user's counters.
+- `aborted` marks a match stopped without a regular end, for example on server shutdown.
+
+### Writing the result of a match
+
+When a match ends, the server writes the `matches` row, every `match_players` row, and the counter updates of all registered participants in a single transaction. Counters are increased atomically in SQL (for example `xp = xp + $1`), never read, changed, and written back. An `aborted` match is logged but does not change any counter. A failed database write is logged and never blocks or changes the match.
+
+### Authentication
+
+Login uses server-side sessions instead of JWT, so logging out really revokes access and no signing secret is needed. The server issues a random token and stores only its hash in `auth_sessions`; logging out deletes the row, and expired rows are removed periodically. This login session is separate from the in-memory reconnect token that keeps a player in a match.
+
+### Access rights and backups
+
+- The backend connects with an application role that may only read and insert rows in `matches` and `match_players` and may truncate no table.
+- A separate administrator role runs the migrations, prunes the match log, and removes expired sessions.
+- Development backups use `pg_dump`; a production deployment uses continuous WAL archiving for point-in-time recovery. In development, `docker compose down -v` deletes the database volume.
+
+### Deferred
+
+Email verification, password reset with email delivery, and protection against XP farming are not part of the current scope. The XP awarded per match and the level thresholds are still open.
 
 ## 3. Intelligent Player Approach
 
@@ -115,13 +150,16 @@ The bots are evaluated with a headless simulator that runs complete matches with
 
 ## 5. Data Needed for Evaluation
 
-- The `matches`, `match_players`, and `match_actions` records.
+The headless simulator records the following data in its own output files; it is not stored in PostgreSQL.
+
+- Per match: seed, player count, bot level per seat, finishing order, and end reason.
+- Every action with the random values selected for it, so a simulated match can be replayed.
 - The available legal actions at each decision and the chosen action.
 - Decision timing.
 - Storm values with requested and actual draw amounts after the hand limit.
 - Reshuffle events and whether a new deck was added.
 - +2 chain lengths and outcomes.
-- Finishing order, forfeits, and spectator or leave events.
+- Forfeits, and spectator or leave events.
 
 ## 6. Success Criteria
 
