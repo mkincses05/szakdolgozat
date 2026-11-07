@@ -1,1 +1,36 @@
-{ "title": "Játék" }
+{
+  "title": "Játék",
+  "turn": {
+    "yours": "Te következel.",
+    "other": "{{name}} következik.",
+    "timeLeft": "Hátralévő idő: {{seconds}} mp"
+  },
+  "table": {
+    "topCard": "Felső lap: {{card}}",
+    "activeColor": "Választott szín: {{color}}",
+    "penalty_one": "$t(common:cards.plus2) büntetés: {{count}} lap",
+    "penalty_other": "$t(common:cards.plus2) büntetés: {{count}} lap",
+    "drawPile_one": "Húzópakli: {{count}} lap",
+    "drawPile_other": "Húzópakli: {{count}} lap"
+  },
+  "players": {
+    "title": "Játékosok",
+    "you": "te",
+    "cards_one": "{{count}} lap",
+    "cards_other": "{{count}} lap",
+    "finished": "végzett, {{position}}. helyen",
+    "forfeited": "feladta",
+    "onTurn": "soron van"
+  },
+  "hand": {
+    "title_one": "A kezed ({{count}} lap)",
+    "title_other": "A kezed ({{count}} lap)"
+  },
+  "actions": {
+    "play": "Kijelölt lapok kijátszása",
+    "draw": "Húzás",
+    "penalty_one": "Büntetés felhúzása ({{count}} lap)",
+    "penalty_other": "Büntetés felhúzása ({{count}} lap)",
+    "pass": "Passz"
+  }
+}

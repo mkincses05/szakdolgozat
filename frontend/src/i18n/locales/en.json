@@ -16,6 +16,28 @@
     "reconnecting": "Connection lost, reconnecting…",
     "replaced": "This game was opened in another tab. Continue there, or reload this page."
   },
+  "cards": {
+    "plus2": "+2",
+    "swap": "Swap",
+    "storm": "Storm",
+    "colorChange": "Color Change",
+    "spy": "Spy"
+  },
+  "colors": {
+    "red": "Red",
+    "blue": "Blue",
+    "green": "Green",
+    "yellow": "Yellow"
+  },
+  "cardLabel": {
+    "number": "{{color}} {{number}}",
+    "colored": "{{color}} {{name}}"
+  },
+  "presence": {
+    "connected": "connected",
+    "disconnected": "disconnected",
+    "left": "left"
+  },
   "errors": {
     "invalid_payload": "The request was invalid.",
     "stale_state": "The game changed in the meantime. Please try again.",
@@ -38,14 +60,14 @@
     "illegal_card": "That card cannot be played now.",
     "invalid_combo": "These cards cannot be played together.",
     "too_many_special_cards": "Only one special card can be played per turn.",
-    "penalty_active": "A +2 penalty is active: play a +2 or draw the penalty.",
+    "penalty_active": "A $t(common:cards.plus2) penalty is active: play a $t(common:cards.plus2) or draw the penalty.",
     "missing_color": "Choose a color.",
-    "unexpected_color": "A color can only be chosen for Color Change.",
+    "unexpected_color": "A color can only be chosen for $t(common:cards.colorChange).",
     "missing_target": "Choose a player.",
     "unexpected_target": "This card does not need a target player.",
     "invalid_target": "That player cannot be chosen.",
     "missing_swap_selection": "Choose a card to give and a card to take.",
-    "unexpected_swap_selection": "Cards can only be exchanged with Swap.",
+    "unexpected_swap_selection": "Cards can only be exchanged with $t(common:cards.swap).",
     "invalid_target_position": "That card position does not exist.",
     "hand_limit_reached": "Your hand is full, you cannot draw.",
     "not_connected": "There is no connection to the server.",

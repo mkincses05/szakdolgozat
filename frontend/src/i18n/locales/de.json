@@ -16,6 +16,28 @@
     "reconnecting": "Verbindung unterbrochen, neuer Verbindungsversuch…",
     "replaced": "Dieses Spiel wurde in einem anderen Tab geöffnet. Spiele dort weiter oder lade diese Seite neu."
   },
+  "cards": {
+    "plus2": "+2",
+    "swap": "Swap",
+    "storm": "Storm",
+    "colorChange": "Color Change",
+    "spy": "Spy"
+  },
+  "colors": {
+    "red": "Rot",
+    "blue": "Blau",
+    "green": "Grün",
+    "yellow": "Gelb"
+  },
+  "cardLabel": {
+    "number": "{{color}} {{number}}",
+    "colored": "{{color}} {{name}}"
+  },
+  "presence": {
+    "connected": "verbunden",
+    "disconnected": "Verbindung getrennt",
+    "left": "hat den Raum verlassen"
+  },
   "errors": {
     "invalid_payload": "Die Anfrage war ungültig.",
     "stale_state": "Das Spiel hat sich inzwischen geändert. Bitte versuche es erneut.",
@@ -38,14 +60,14 @@
     "illegal_card": "Diese Karte kann jetzt nicht gespielt werden.",
     "invalid_combo": "Diese Karten können nicht zusammen gespielt werden.",
     "too_many_special_cards": "Pro Zug kann nur eine Sonderkarte gespielt werden.",
-    "penalty_active": "Eine +2-Strafe ist aktiv: Spiele eine +2 oder ziehe die Strafe.",
+    "penalty_active": "Eine $t(common:cards.plus2)-Strafe ist aktiv: Spiele eine $t(common:cards.plus2) oder ziehe die Strafe.",
     "missing_color": "Wähle eine Farbe.",
-    "unexpected_color": "Eine Farbe kann nur mit Color Change gewählt werden.",
+    "unexpected_color": "Eine Farbe kann nur mit $t(common:cards.colorChange) gewählt werden.",
     "missing_target": "Wähle einen Spieler.",
     "unexpected_target": "Für diese Karte wird kein Zielspieler benötigt.",
     "invalid_target": "Dieser Spieler kann nicht gewählt werden.",
     "missing_swap_selection": "Wähle eine Karte zum Abgeben und eine zum Nehmen.",
-    "unexpected_swap_selection": "Karten können nur mit Swap getauscht werden.",
+    "unexpected_swap_selection": "Karten können nur mit $t(common:cards.swap) getauscht werden.",
     "invalid_target_position": "Diese Kartenposition gibt es nicht.",
     "hand_limit_reached": "Deine Hand ist voll, du kannst nicht ziehen.",
     "not_connected": "Keine Verbindung zum Server.",

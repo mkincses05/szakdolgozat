@@ -1,1 +1,36 @@
-{ "title": "Game" }
+{
+  "title": "Game",
+  "turn": {
+    "yours": "It is your turn.",
+    "other": "It is {{name}}'s turn.",
+    "timeLeft": "Time left: {{seconds}} s"
+  },
+  "table": {
+    "topCard": "Top card: {{card}}",
+    "activeColor": "Chosen color: {{color}}",
+    "penalty_one": "$t(common:cards.plus2) penalty: {{count}} card",
+    "penalty_other": "$t(common:cards.plus2) penalty: {{count}} cards",
+    "drawPile_one": "Draw pile: {{count}} card",
+    "drawPile_other": "Draw pile: {{count}} cards"
+  },
+  "players": {
+    "title": "Players",
+    "you": "you",
+    "cards_one": "{{count}} card",
+    "cards_other": "{{count}} cards",
+    "finished": "finished in place {{position}}",
+    "forfeited": "forfeited",
+    "onTurn": "on turn"
+  },
+  "hand": {
+    "title_one": "Your hand ({{count}} card)",
+    "title_other": "Your hand ({{count}} cards)"
+  },
+  "actions": {
+    "play": "Play selected cards",
+    "draw": "Draw a card",
+    "penalty_one": "Draw the penalty ({{count}} card)",
+    "penalty_other": "Draw the penalty ({{count}} cards)",
+    "pass": "Pass"
+  }
+}

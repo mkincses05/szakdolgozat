@@ -1,1 +1,36 @@
-{ "title": "Spiel" }
+{
+  "title": "Spiel",
+  "turn": {
+    "yours": "Du bist am Zug.",
+    "other": "{{name}} ist am Zug.",
+    "timeLeft": "Verbleibende Zeit: {{seconds}} s"
+  },
+  "table": {
+    "topCard": "Oberste Karte: {{card}}",
+    "activeColor": "Gewählte Farbe: {{color}}",
+    "penalty_one": "$t(common:cards.plus2)-Strafe: {{count}} Karte",
+    "penalty_other": "$t(common:cards.plus2)-Strafe: {{count}} Karten",
+    "drawPile_one": "Nachziehstapel: {{count}} Karte",
+    "drawPile_other": "Nachziehstapel: {{count}} Karten"
+  },
+  "players": {
+    "title": "Spieler",
+    "you": "du",
+    "cards_one": "{{count}} Karte",
+    "cards_other": "{{count}} Karten",
+    "finished": "fertig auf Platz {{position}}",
+    "forfeited": "aufgegeben",
+    "onTurn": "am Zug"
+  },
+  "hand": {
+    "title_one": "Deine Hand ({{count}} Karte)",
+    "title_other": "Deine Hand ({{count}} Karten)"
+  },
+  "actions": {
+    "play": "Ausgewählte Karten spielen",
+    "draw": "Karte ziehen",
+    "penalty_one": "Strafe ziehen ({{count}} Karte)",
+    "penalty_other": "Strafe ziehen ({{count}} Karten)",
+    "pass": "Passen"
+  }
+}

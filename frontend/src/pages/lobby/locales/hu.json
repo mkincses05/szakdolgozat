@@ -6,11 +6,6 @@
   "minPlayers": "A meccs indításához legalább {{min}} játékos kell.",
   "you": "te",
   "host": "házigazda",
-  "presence": {
-    "connected": "csatlakozva",
-    "disconnected": "nincs kapcsolat",
-    "left": "kilépett"
-  },
   "start": "Meccs indítása",
   "waitingForHost": "Várakozás arra, hogy a házigazda elindítsa a meccset.",
   "leave": "Kilépés a szobából"

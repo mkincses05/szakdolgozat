@@ -16,6 +16,28 @@
     "reconnecting": "Megszakadt a kapcsolat, újracsatlakozás…",
     "replaced": "Ez a játék egy másik lapon nyílt meg. Folytasd ott, vagy töltsd újra ezt az oldalt."
   },
+  "cards": {
+    "plus2": "+2",
+    "swap": "Swap",
+    "storm": "Storm",
+    "colorChange": "Color Change",
+    "spy": "Spy"
+  },
+  "colors": {
+    "red": "Piros",
+    "blue": "Kék",
+    "green": "Zöld",
+    "yellow": "Sárga"
+  },
+  "cardLabel": {
+    "number": "{{color}} {{number}}",
+    "colored": "{{color}} {{name}}"
+  },
+  "presence": {
+    "connected": "csatlakozva",
+    "disconnected": "nincs kapcsolat",
+    "left": "kilépett"
+  },
   "errors": {
     "invalid_payload": "Érvénytelen kérés.",
     "stale_state": "Közben megváltozott a játék állása. Próbáld újra.",
@@ -38,14 +60,14 @@
     "illegal_card": "Ezt a lapot most nem lehet kijátszani.",
     "invalid_combo": "Ezeket a lapokat nem lehet együtt kijátszani.",
     "too_many_special_cards": "Egy körben csak egy speciális lapot lehet kijátszani.",
-    "penalty_active": "+2-es büntetés van érvényben: játssz ki egy +2-t, vagy húzd fel a büntetést.",
+    "penalty_active": "$t(common:cards.plus2) büntetés van érvényben: játssz ki egy $t(common:cards.plus2) lapot, vagy húzd fel a büntetést.",
     "missing_color": "Válassz színt.",
-    "unexpected_color": "Színt csak a Color Change lappal lehet választani.",
+    "unexpected_color": "Színt csak a $t(common:cards.colorChange) lappal lehet választani.",
     "missing_target": "Válassz játékost.",
     "unexpected_target": "Ehhez a laphoz nem kell célpontot választani.",
     "invalid_target": "Ezt a játékost nem lehet kiválasztani.",
     "missing_swap_selection": "Válaszd ki, melyik lapot adod és melyiket veszed el.",
-    "unexpected_swap_selection": "Lapot cserélni csak a Swap lappal lehet.",
+    "unexpected_swap_selection": "Lapot cserélni csak a $t(common:cards.swap) lappal lehet.",
     "invalid_target_position": "Ilyen lappozíció nem létezik.",
     "hand_limit_reached": "Tele van a kezed, nem húzhatsz.",
     "not_connected": "Nincs kapcsolat a szerverrel.",

@@ -6,11 +6,6 @@
   "minPlayers": "At least {{min}} players are needed to start a match.",
   "you": "you",
   "host": "host",
-  "presence": {
-    "connected": "connected",
-    "disconnected": "disconnected",
-    "left": "left"
-  },
   "start": "Start match",
   "waitingForHost": "Waiting for the host to start the match.",
   "leave": "Leave room"

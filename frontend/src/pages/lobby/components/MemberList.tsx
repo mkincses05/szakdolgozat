@@ -22,7 +22,7 @@ export function MemberList({ room, userId }: MemberListProps) {
           return (
             <li key={member.userId}>
               {member.displayName}
-              {tags.length > 0 && ` (${tags.join(", ")})`} – {t(`presence.${member.presence}`)}
+              {tags.length > 0 && ` (${tags.join(", ")})`} – {t(`common:presence.${member.presence}`)}
             </li>
           );
         })}
