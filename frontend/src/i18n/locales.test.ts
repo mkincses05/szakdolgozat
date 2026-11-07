@@ -1,4 +1,5 @@
-import { NAMESPACES, resources, SUPPORTED_LANGUAGES } from "./index";
+import { ERROR_CODES } from "@wildhand/shared";
+import { COMMON_NAMESPACE, NAMESPACES, resources, SUPPORTED_LANGUAGES } from "./index";
 
 function keys(value: object, prefix = ""): string[] {
   return Object.entries(value).flatMap(([key, child]) =>
@@ -15,5 +16,11 @@ describe("translations", () => {
       expect(resources[language][namespace], `${language}/${namespace} is missing`).toBeDefined();
       expect(keys(resources[language][namespace]).sort()).toEqual(expected);
     }
+  });
+
+  it("translate every server error code in the common namespace", () => {
+    const translated = keys(resources.en[COMMON_NAMESPACE]);
+    const missing = ERROR_CODES.filter((code) => !translated.includes(`errors.${code}`));
+    expect(missing).toEqual([]);
   });
 });

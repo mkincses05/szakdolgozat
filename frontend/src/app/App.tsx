@@ -1,5 +1,14 @@
-import { LandingPage } from "../pages/landing/LandingPage";
+import { ConnectionStatus } from "../components/ConnectionStatus";
+import { CurrentPage } from "./CurrentPage";
+import { ServerStateProvider } from "./ServerStateProvider";
 
 export function App() {
-  return <LandingPage />;
+  return (
+    <ServerStateProvider>
+      <div className="flex flex-col gap-4 p-4">
+        <ConnectionStatus />
+        <CurrentPage />
+      </div>
+    </ServerStateProvider>
+  );
 }

@@ -1,1 +1,45 @@
-{ "app": { "title": "Wildhand" } }
+{
+  "app": { "title": "Wildhand" },
+  "status": { "loading": "Betöltés…" },
+  "connection": {
+    "connecting": "Kapcsolódás a szerverhez…",
+    "connected": "Kapcsolódva a szerverhez",
+    "reconnecting": "Megszakadt a kapcsolat, újracsatlakozás…",
+    "replaced": "Ez a játék egy másik lapon nyílt meg. Folytasd ott, vagy töltsd újra ezt az oldalt."
+  },
+  "errors": {
+    "invalid_payload": "Érvénytelen kérés.",
+    "stale_state": "Közben megváltozott a játék állása. Próbáld újra.",
+    "internal_error": "Hiba történt a szerveren.",
+    "invalid_reconnect_token": "Az előző játékod nem található.",
+    "session_expired": "Az előző játékod lejárt.",
+    "room_not_found": "Nincs ilyen kódú szoba.",
+    "room_full": "A szoba megtelt.",
+    "room_in_match": "Ebben a szobában már folyik egy meccs.",
+    "not_in_room": "Nem vagy szobában.",
+    "already_in_room": "Már egy szobában vagy.",
+    "not_host": "Ezt csak a házigazda teheti meg.",
+    "not_enough_players": "Nincs elég játékos a meccs indításához.",
+    "too_many_players": "Túl sok játékos van a szobában.",
+    "match_not_running": "Nem folyik meccs.",
+    "not_in_match": "Nem játszol ebben a meccsben.",
+    "player_not_active": "Már nem vagy aktív játékos ebben a meccsben.",
+    "not_your_turn": "Nem te következel.",
+    "card_not_in_hand": "Ez a lap nincs a kezedben.",
+    "illegal_card": "Ezt a lapot most nem lehet kijátszani.",
+    "invalid_combo": "Ezeket a lapokat nem lehet együtt kijátszani.",
+    "too_many_special_cards": "Egy körben csak egy speciális lapot lehet kijátszani.",
+    "penalty_active": "+2-es büntetés van érvényben: játssz ki egy +2-t, vagy húzd fel a büntetést.",
+    "missing_color": "Válassz színt.",
+    "unexpected_color": "Színt csak a Color Change lappal lehet választani.",
+    "missing_target": "Válassz játékost.",
+    "unexpected_target": "Ehhez a laphoz nem kell célpontot választani.",
+    "invalid_target": "Ezt a játékost nem lehet kiválasztani.",
+    "missing_swap_selection": "Válaszd ki, melyik lapot adod és melyiket veszed el.",
+    "unexpected_swap_selection": "Lapot cserélni csak a Swap lappal lehet.",
+    "invalid_target_position": "Ilyen lappozíció nem létezik.",
+    "hand_limit_reached": "Tele van a kezed, nem húzhatsz.",
+    "not_connected": "Nincs kapcsolat a szerverrel.",
+    "no_response": "A szerver nem válaszolt. Próbáld újra."
+  }
+}
