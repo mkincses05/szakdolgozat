@@ -35,7 +35,15 @@ describe("LandingPage", () => {
     await waitFor(() => expect(screen.getByText("Loading…")).toBeInTheDocument());
     expect(loadSession()).toEqual(session);
 
-    act(() => fakeSocket.receive("room:state", { code: "ABC123", state: "lobby" } as RoomView));
+    const room: RoomView = {
+      code: "ABC123",
+      state: "lobby",
+      hostUserId: "u1",
+      members: [{ userId: "u1", displayName: "Anna", presence: "connected" }],
+      minPlayers: 2,
+      maxPlayers: 8
+    };
+    act(() => fakeSocket.receive("room:state", room));
     expect(screen.getByRole("heading", { name: "Lobby" })).toBeInTheDocument();
   });
 

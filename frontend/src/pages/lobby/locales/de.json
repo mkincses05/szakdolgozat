@@ -1,1 +1,17 @@
-{ "title": "Lobby" }
+{
+  "title": "Lobby",
+  "roomCode": "Raumcode: {{code}}",
+  "shareCode": "Teile diesen Code mit den anderen Spielern.",
+  "players": "Spieler ({{count}}/{{max}})",
+  "minPlayers": "Zum Starten eines Spiels werden mindestens {{min}} Spieler benötigt.",
+  "you": "du",
+  "host": "Gastgeber",
+  "presence": {
+    "connected": "verbunden",
+    "disconnected": "Verbindung getrennt",
+    "left": "hat den Raum verlassen"
+  },
+  "start": "Spiel starten",
+  "waitingForHost": "Warte darauf, dass der Gastgeber das Spiel startet.",
+  "leave": "Raum verlassen"
+}

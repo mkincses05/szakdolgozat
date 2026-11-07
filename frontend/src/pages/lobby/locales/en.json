@@ -1,1 +1,17 @@
-{ "title": "Lobby" }
+{
+  "title": "Lobby",
+  "roomCode": "Room code: {{code}}",
+  "shareCode": "Share this code with the other players.",
+  "players": "Players ({{count}}/{{max}})",
+  "minPlayers": "At least {{min}} players are needed to start a match.",
+  "you": "you",
+  "host": "host",
+  "presence": {
+    "connected": "connected",
+    "disconnected": "disconnected",
+    "left": "left"
+  },
+  "start": "Start match",
+  "waitingForHost": "Waiting for the host to start the match.",
+  "leave": "Leave room"
+}
