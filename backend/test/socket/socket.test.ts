@@ -109,6 +109,18 @@ describe("Socket.IO protocol", () => {
     expect(await player.emit("room:start", action())).toEqual({ ok: false, code: "not_in_room" });
   });
 
+  it("answers a repeated room:leave with the original acknowledgement", async () => {
+    const url = await startServer();
+    const { host } = await createRoom(url);
+    const leave = action();
+
+    expect(await host.emit("room:leave", leave)).toEqual({ ok: true });
+    // The session is gone, but the connection still remembers the answer to this action.
+    expect(await host.emit("room:leave", leave)).toEqual({ ok: true });
+    // A new leave is a new action, and there is no session left to leave.
+    expect(await host.emit("room:leave", action())).toEqual({ ok: false, code: "not_in_room" });
+  });
+
   it("accepts up to 8 players in a room and rejects the 9th (R1)", async () => {
     const url = await startServer();
     const { session } = await createRoom(url);

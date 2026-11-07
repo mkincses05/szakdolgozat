@@ -72,7 +72,7 @@ After every accepted action the server sends the `game:effect` events first, the
 
 ### Duplicate and out-of-order actions
 
-- An action whose `actionId` has already been processed returns the original acknowledgement without changing the state. Acknowledgements are remembered per session for the most recent 100 actions; `room:create` and `room:join`, which are sent before a session exists, are remembered per connection.
+- An action whose `actionId` has already been processed returns the original acknowledgement without changing the state, whether the action was accepted or rejected. A client therefore sends every new attempt, for example after `stale_state`, with a new `actionId`. Acknowledgements are remembered per session for the most recent 100 actions; actions answered without a session are remembered per connection, also for the most recent 100: `room:create` and `room:join`, sent before a session exists, and a successful `room:leave`, which removes the session.
 - An action whose `stateVersion` is not the current version is rejected with `stale_state`.
 - Each accepted action increments `stateVersion` exactly once. A change of connection presence that does not hand over the turn keeps the version, so an action sent just before it stays valid; it is still validated against the new presence.
 - Actions for one match are processed sequentially, so concurrent actions cannot interleave.
