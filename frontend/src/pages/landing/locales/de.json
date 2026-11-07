@@ -1,6 +1,5 @@
 {
   "tagline": "Ein Kartenspiel für mehrere Spieler",
-  "language": "Sprache",
   "displayName": "Dein Name",
   "createRoom": "Raum erstellen",
   "roomCode": "Raumcode",
@@ -8,5 +7,15 @@
   "validation": {
     "displayName": "Dein Name muss {{min}}–{{max}} Zeichen lang sein.",
     "roomCode": "Der Raumcode besteht aus {{length}} Buchstaben oder Ziffern."
+  },
+  "account": {
+    "title": "Dein Konto",
+    "loggedInAs": "Angemeldet als {{name}} ({{username}})",
+    "xp": "Erfahrungspunkte",
+    "matchesPlayed": "Gespielte Partien",
+    "wins": "Siege",
+    "forfeits": "Aufgegebene Partien",
+    "logout": "Abmelden",
+    "logInOrRegister": "Anmelden oder registrieren"
   }
 }

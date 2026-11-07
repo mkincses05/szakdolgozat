@@ -1,7 +1,7 @@
 import type { MatchResults, PlayerMatchView, RoomView } from "@wildhand/shared";
 import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { App } from "../../app/App";
-import { loadSession, saveSession } from "../../services/session";
+import { loadSession, saveSession, saveGuestChoice } from "../../services/session";
 import { fakeSocket } from "../../test/fakeSocket";
 
 vi.mock("../../services/socket", async () => ({ socket: (await import("../../test/fakeSocket")).fakeSocket }));
@@ -78,6 +78,8 @@ describe("ResultsPage", () => {
   beforeEach(() => {
     fakeSocket.reset();
     sessionStorage.clear();
+    // Without a session these tests start on the landing page, as a guest.
+    saveGuestChoice(true);
   });
 
   it("shows the winner, the end reason, and the standings from the server", async () => {

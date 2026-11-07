@@ -1,5 +1,6 @@
 // Form state of the landing page: validates the inputs with the shared schemas, then creates or
-// joins a room and starts the session returned by the server.
+// joins a room and starts the session returned by the server. A logged-in player plays under the
+// account name, so only guests type a name.
 
 import { displayNameSchema, roomCodeSchema } from "@wildhand/shared";
 import { useState } from "react";
@@ -9,7 +10,7 @@ import { sendAction, type ActionResult } from "../../../services/actions";
 
 export type LandingValidationError = "displayName" | "roomCode";
 
-export function useLandingForm() {
+export function useLandingForm(accountName: string | null) {
   const { startSession } = useServerState();
   const [displayName, setDisplayName] = useState("");
   const [roomCode, setRoomCode] = useState("");
@@ -20,6 +21,9 @@ export function useLandingForm() {
   const validName = (): string | null => {
     setValidationError(null);
     clearError();
+    if (accountName !== null) {
+      return accountName;
+    }
     const parsed = displayNameSchema.safeParse(displayName);
     if (!parsed.success) {
       setValidationError("displayName");

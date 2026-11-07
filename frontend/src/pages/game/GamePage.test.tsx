@@ -1,7 +1,7 @@
 import type { Card, PlayerMatchView, RoomView } from "@wildhand/shared";
 import { act, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { App } from "../../app/App";
-import { saveSession } from "../../services/session";
+import { saveSession, saveGuestChoice } from "../../services/session";
 import { fakeSocket } from "../../test/fakeSocket";
 
 vi.mock("../../services/socket", async () => ({ socket: (await import("../../test/fakeSocket")).fakeSocket }));
@@ -73,6 +73,8 @@ describe("GamePage", () => {
   beforeEach(() => {
     fakeSocket.reset();
     sessionStorage.clear();
+    // Without a session these tests start on the landing page, as a guest.
+    saveGuestChoice(true);
   });
 
   it("shows the public match state", async () => {
@@ -164,6 +166,8 @@ describe("GamePage special cards", () => {
   beforeEach(() => {
     fakeSocket.reset();
     sessionStorage.clear();
+    // Without a session these tests start on the landing page, as a guest.
+    saveGuestChoice(true);
   });
 
   const lastPayload = () => fakeSocket.emitWithAck.mock.lastCall?.[1];

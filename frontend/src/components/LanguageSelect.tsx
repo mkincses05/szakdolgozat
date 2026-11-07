@@ -1,12 +1,12 @@
 import { useTranslation } from "react-i18next";
-import { SUPPORTED_LANGUAGES } from "../../../i18n";
+import { SUPPORTED_LANGUAGES } from "../i18n";
 
 export function LanguageSelect() {
-  const { t, i18n } = useTranslation("landing");
+  const { t, i18n } = useTranslation();
 
   return (
     <label className="flex flex-col gap-1">
-      {t("language")}
+      {t("common:language")}
       <select
         className="border p-1"
         value={i18n.resolvedLanguage}

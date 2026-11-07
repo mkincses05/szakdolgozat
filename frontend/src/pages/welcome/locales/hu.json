@@ -1,0 +1,29 @@
+{
+  "intro": "Jelentkezz be, hogy tapasztalati pontokat gyűjts, vagy játssz vendégként.",
+  "showLogin": "Belépés",
+  "showRegister": "Regisztráció",
+  "continueAsGuest": "Folytatás vendégként",
+  "login": {
+    "title": "Belépés",
+    "login": "Felhasználónév vagy email",
+    "password": "Jelszó",
+    "submit": "Belépés",
+    "missingInput": "Add meg a felhasználóneved vagy az email-címed és a jelszavad."
+  },
+  "register": {
+    "title": "Regisztráció",
+    "fields": {
+      "username": "Felhasználónév",
+      "email": "Email",
+      "displayName": "Megjelenített név",
+      "password": "Jelszó"
+    },
+    "submit": "Fiók létrehozása",
+    "validation": {
+      "username": "A felhasználónév {{min}}–{{max}} karakter hosszú lehet, és csak betűket, számjegyeket, valamint a . _ - karaktereket tartalmazhatja.",
+      "email": "Adj meg egy érvényes email-címet.",
+      "displayName": "A megjelenített név {{min}}–{{max}} karakter hosszú lehet.",
+      "password": "A jelszó {{min}}–{{max}} karakter hosszú lehet."
+    }
+  }
+}

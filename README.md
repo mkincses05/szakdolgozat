@@ -24,6 +24,15 @@ The game will be available in:
 
 You can choose the language used throughout the game, including the main menu, lobby, gameplay, spectator view, and results.
 
+## 👤 Accounts and Guests
+
+When you open the game, you can log in, register, or continue as a guest.
+
+* **Registered players** play under their account name and collect **experience points (XP)**: 10 XP for every match, plus 10 XP for every player who finishes behind them. Leaving a match early earns nothing. Your profile shows your XP, matches played, wins, and forfeits.
+* **Guests** choose a name for each room and play without collecting XP.
+
+You log in with your username or your email address, and you stay logged in for 30 days after you last played.
+
 ## 🎯 Objective
 
 The objective of the game is to be the **first active player to get rid of all cards in their hand**. That player wins the match, while the other active players continue playing for the remaining positions until only one active player remains.

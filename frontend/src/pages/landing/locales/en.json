@@ -1,6 +1,5 @@
 {
   "tagline": "A multiplayer card game",
-  "language": "Language",
   "displayName": "Your name",
   "createRoom": "Create room",
   "roomCode": "Room code",
@@ -8,5 +7,15 @@
   "validation": {
     "displayName": "Your name must be {{min}}–{{max}} characters long.",
     "roomCode": "The room code consists of {{length}} letters or digits."
+  },
+  "account": {
+    "title": "Your account",
+    "loggedInAs": "Logged in as {{name}} ({{username}})",
+    "xp": "Experience points",
+    "matchesPlayed": "Matches played",
+    "wins": "Wins",
+    "forfeits": "Forfeits",
+    "logout": "Log out",
+    "logInOrRegister": "Log in or register"
   }
 }

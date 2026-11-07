@@ -31,7 +31,8 @@ This combination is useful because:
 
 In this project, React is used for:
 
-- the landing page with language selection
+- the welcome page with login, registration, and the guest option
+- the landing page with language selection and the player's profile
 - the lobby
 - the gameplay interface, including the player's hand, action controls, turn timer, and Swap, Spy, and Color Change dialogs
 - the spectator view for players who have finished
@@ -61,7 +62,7 @@ frontend/src/
   main.tsx                  entry point
   app/                      root App component, providers, selection of the visible page
   pages/
-    <page>/                 landing, lobby, game, results
+    <page>/                 welcome, landing, lobby, game, results
       <Page>Page.tsx        page component
       components/           components used only on this page
       hooks/                hooks used only on this page
@@ -81,9 +82,9 @@ frontend/src/
 
 New code starts in the folder of the page that uses it and moves to the shared `components/`, `hooks/`, or `utils/` folder only when a second page starts using it. Pages are broken down into small components and custom hooks: components render the interface and may keep simple state that belongs to them alone, such as whether a menu is open; hooks hold all other state, timers, and other side effects, and connect components to the services.
 
-The services are the non-React infrastructure that exists once for the whole application: the single Socket.IO connection, a typed wrapper that sends actions with a generated `actionId` and returns their acknowledgements, and the storage of the reconnect token in the browser. The session is kept in `sessionStorage`: it survives a reload, and every browser tab is a separate player, so a second tab does not take over the first tab's session. On every (re)connect the client resumes the stored session with `session:resume`. They contain no React code and no game logic, so they can be tested without rendering components.
+The services are the non-React infrastructure that exists once for the whole application: the single Socket.IO connection, a typed wrapper that sends actions with a generated `actionId` and returns their acknowledgements, the storage of the reconnect token in the browser, and the account API client, which sends its requests with `credentials: "include"` so the browser stores and sends the HttpOnly login cookie. The session is kept in `sessionStorage`: it survives a reload, and every browser tab is a separate player, so a second tab does not take over the first tab's session. On every (re)connect the client resumes the stored session with `session:resume`. They contain no React code and no game logic, so they can be tested without rendering components.
 
-The application keeps only the latest `room:state`, `game:state`, and `game:ended` received from the server and shares them with the pages through a React context. The visible page is selected from this state, without URL routing: the landing page without a session, the lobby in a room without a running match, the gameplay page during a match, and the results page after a match until the player closes it. There is no `types/` folder, because shared types come from `@wildhand/shared`.
+The application keeps only the latest `room:state`, `game:state`, and `game:ended` received from the server and shares them with the pages through a React context. A second context holds the account: the profile from `GET /api/auth/me` and whether the player chose to continue as a guest (kept in `sessionStorage`, so a new tab asks again). After login, registration, or logout the socket reconnects, because the server reads the login cookie only when a socket connects. The visible page is selected from both, without URL routing: outside a room the welcome page until the player logs in or continues as a guest, then the landing page; the lobby in a room without a running match, the gameplay page during a match, and the results page after a match until the player closes it. There is no `types/` folder, because shared types come from `@wildhand/shared`.
 
 ### Styling
 

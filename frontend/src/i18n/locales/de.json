@@ -2,6 +2,7 @@
   "app": {
     "title": "Wildhand"
   },
+  "language": "Sprache",
   "languages": {
     "en": "English",
     "hu": "Magyar",

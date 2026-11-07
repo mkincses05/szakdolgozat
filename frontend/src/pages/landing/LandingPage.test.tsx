@@ -2,7 +2,8 @@ import type { RoomView } from "@wildhand/shared";
 import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { App } from "../../app/App";
 import i18n from "../../i18n";
-import { loadSession } from "../../services/session";
+import { loadSession, saveGuestChoice } from "../../services/session";
+import { stubAccountApi } from "../../test/accountApi";
 import { fakeSocket } from "../../test/fakeSocket";
 
 vi.mock("../../services/socket", async () => ({ socket: (await import("../../test/fakeSocket")).fakeSocket }));
@@ -17,6 +18,8 @@ describe("LandingPage", () => {
   beforeEach(() => {
     fakeSocket.reset();
     sessionStorage.clear();
+    // Without a session these tests start on the landing page, as a guest.
+    saveGuestChoice(true);
   });
 
   afterEach(() => i18n.changeLanguage("en"));
@@ -93,5 +96,21 @@ describe("LandingPage", () => {
     fireEvent.change(screen.getByLabelText("Language"), { target: { value: "hu" } });
 
     expect(await screen.findByRole("button", { name: "Szoba létrehozása" })).toBeInTheDocument();
+  });
+  it("creates a room under the account name when logged in", async () => {
+    stubAccountApi({
+      "/me": {
+        ok: true,
+        data: { id: "a1", username: "anna_k", email: "anna@example.com", displayName: "Anna", xp: 40, matchesPlayed: 3, wins: 1, forfeits: 0 }
+      }
+    });
+    fakeSocket.emitWithAck.mockResolvedValue({ ok: true, data: session });
+    render(<App />);
+
+    expect(await screen.findByText("Logged in as Anna (anna_k)")).toBeInTheDocument();
+    expect(screen.queryByLabelText("Your name")).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Create room" }));
+
+    expect(fakeSocket.emitWithAck).toHaveBeenCalledWith("room:create", expect.objectContaining({ displayName: "Anna" }));
   });
 });

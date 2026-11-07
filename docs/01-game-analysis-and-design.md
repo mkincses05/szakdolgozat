@@ -79,7 +79,8 @@ The detailed state machine is defined in `docs/02-server-state-machine-and-socke
 
 ## 4. Page Flow
 
-- **Landing page**: language selection, display name, create or join a room.
+- **Welcome page**: shown first outside a room; log in, register, or continue as a guest. Without a database only the guest option is offered.
+- **Landing page**: language selection, create or join a room; a logged-in player sees the profile (XP, matches played, wins, forfeits) and plays under the account name, a guest types a display name.
 - **Lobby page**: room members, host controls, and the start button for the host.
 - **Gameplay page**: the player's hand, the discard pile, other players' hand sizes, turn and timer indicators, and Swap, Spy, and Color Change dialogs. Finished players stay on this page in spectator mode with the public state only.
 - **Results page**: the winner, the finishing order, and forfeits.

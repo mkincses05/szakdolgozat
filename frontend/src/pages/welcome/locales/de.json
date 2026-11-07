@@ -1,0 +1,29 @@
+{
+  "intro": "Melde dich an, um Erfahrungspunkte zu sammeln, oder spiele als Gast.",
+  "showLogin": "Anmelden",
+  "showRegister": "Registrieren",
+  "continueAsGuest": "Als Gast fortfahren",
+  "login": {
+    "title": "Anmelden",
+    "login": "Benutzername oder E-Mail",
+    "password": "Passwort",
+    "submit": "Anmelden",
+    "missingInput": "Gib deinen Benutzernamen oder deine E-Mail-Adresse und dein Passwort ein."
+  },
+  "register": {
+    "title": "Registrieren",
+    "fields": {
+      "username": "Benutzername",
+      "email": "E-Mail",
+      "displayName": "Anzeigename",
+      "password": "Passwort"
+    },
+    "submit": "Konto erstellen",
+    "validation": {
+      "username": "Der Benutzername muss {{min}}–{{max}} Zeichen lang sein und darf nur Buchstaben, Ziffern und die Zeichen . _ - enthalten.",
+      "email": "Gib eine gültige E-Mail-Adresse ein.",
+      "displayName": "Der Anzeigename muss {{min}}–{{max}} Zeichen lang sein.",
+      "password": "Das Passwort muss {{min}}–{{max}} Zeichen lang sein."
+    }
+  }
+}
