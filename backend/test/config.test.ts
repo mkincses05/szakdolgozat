@@ -8,14 +8,31 @@ describe("loadConfig", () => {
       port: 3000,
       corsOrigin: "*",
       turnTimeoutMs: DEFAULT_TURN_TIMEOUT_MS,
-      reconnectGraceMs: DEFAULT_RECONNECT_GRACE_MS
+      reconnectGraceMs: DEFAULT_RECONNECT_GRACE_MS,
+      databaseUrl: null
     });
   });
 
   it("reads the values from the environment", () => {
     expect(
-      loadConfig({ PORT: "0", CORS_ORIGIN: "http://localhost:5173", TURN_TIMEOUT_MS: "30000", RECONNECT_GRACE_MS: "1" })
-    ).toEqual({ port: 0, corsOrigin: "http://localhost:5173", turnTimeoutMs: 30_000, reconnectGraceMs: 1 });
+      loadConfig({
+        PORT: "0",
+        CORS_ORIGIN: "http://localhost:5173",
+        TURN_TIMEOUT_MS: "30000",
+        RECONNECT_GRACE_MS: "1",
+        DATABASE_URL: "postgres://wildhand_app:secret@localhost:5432/wildhand"
+      })
+    ).toEqual({
+      port: 0,
+      corsOrigin: "http://localhost:5173",
+      turnTimeoutMs: 30_000,
+      reconnectGraceMs: 1,
+      databaseUrl: "postgres://wildhand_app:secret@localhost:5432/wildhand"
+    });
+  });
+
+  it("runs without a database when DATABASE_URL is empty", () => {
+    expect(loadConfig({ DATABASE_URL: "" }).databaseUrl).toBeNull();
   });
 
   it("rejects timers of zero (R22, R23) and invalid numbers", () => {

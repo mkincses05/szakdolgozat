@@ -1,0 +1,27 @@
+# Development database. Start with `docker compose up -d`; the passwords come from `.env` (see `.env.example`).
+# The scripts in docker/postgres/init run only when the volume is empty; the schema is created by
+# `npm run db:migrate` in backend/.
+
+services:
+  postgres:
+    image: postgres:18-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: wildhand_admin
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}
+      POSTGRES_DB: wildhand
+      WILDHAND_APP_PASSWORD: ${WILDHAND_APP_PASSWORD:?Set WILDHAND_APP_PASSWORD in .env}
+    ports:
+      # Reachable only from this machine, not from other devices on the same network.
+      - "127.0.0.1:5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql
+      - ./docker/postgres/init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U wildhand_admin -d wildhand"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  postgres-data:

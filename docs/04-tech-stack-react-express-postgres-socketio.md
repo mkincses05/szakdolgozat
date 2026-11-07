@@ -121,6 +121,19 @@ Rooms, the live match state, guests, bots, and reconnect tokens are kept in serv
 - Schema changes are plain SQL migrations applied by a small runner that records them in `schema_migrations`.
 - Passwords are hashed with argon2id.
 
+### Local setup
+
+1. Copy `.env.example` to `.env` in the repository root and `backend/.env.example` to `backend/.env`, and use the same passwords in both.
+2. Start the database with `docker compose up -d`. On the first start, `docker/postgres/init/01-setup.sh` creates the `wildhand_app` role and the `wildhand_test` database.
+3. Create or update the schema with `npm run db:migrate` in `backend/`. It connects with `MIGRATION_DATABASE_URL` (administrator role) and applies the new files in `backend/migrations/`.
+4. Start the backend with `npm run dev`. It connects with `DATABASE_URL` (the restricted `wildhand_app` role); if the variable is empty or the database is unreachable, it logs this and runs without storing anything.
+
+Schema changes are made only by adding a new numbered file to `backend/migrations/` (for example `0002_add_column.sql`); applied files are never edited. Each file runs in its own transaction and is recorded in `schema_migrations`. A new table needs its `GRANT`s for `wildhand_app` in the same migration.
+
+The integration tests in `backend/test/db/` run only when `TEST_DATABASE_URL` is set. They drop the schema of that database, so its name must end in `_test`. In CI, a PostgreSQL service container provides this database.
+
+`docker compose down -v` deletes the database volume together with all data.
+
 ## Socket.IO
 
 Socket.IO (version 4) is used for real-time communication between the client and the server. The event catalog is defined in `docs/02-server-state-machine-and-socketio.md`.

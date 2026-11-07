@@ -7,6 +7,8 @@ export interface ServerConfig {
   turnTimeoutMs: number;
   /** R23 */
   reconnectGraceMs: number;
+  /** Connection of the backend role; `null` runs the server without a database. */
+  databaseUrl: string | null;
 }
 
 function integer(value: string | undefined, fallback: number, name: string, min: number): number {
@@ -29,6 +31,7 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): ServerConfig {
     corsOrigin: env.CORS_ORIGIN || "*",
     // A zero timer would end every turn, or forfeit every disconnect, immediately.
     turnTimeoutMs: integer(env.TURN_TIMEOUT_MS, DEFAULT_TURN_TIMEOUT_MS, "TURN_TIMEOUT_MS", 1),
-    reconnectGraceMs: integer(env.RECONNECT_GRACE_MS, DEFAULT_RECONNECT_GRACE_MS, "RECONNECT_GRACE_MS", 1)
+    reconnectGraceMs: integer(env.RECONNECT_GRACE_MS, DEFAULT_RECONNECT_GRACE_MS, "RECONNECT_GRACE_MS", 1),
+    databaseUrl: env.DATABASE_URL || null
   };
 }
