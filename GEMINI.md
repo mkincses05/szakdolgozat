@@ -121,7 +121,7 @@ The numbered rules in `docs/01-game-analysis-and-design.md` are the technical so
 - The base deck contains 104 cards: 80 number cards, 8 +2 (2 per color), 4 Swap (1 per color), 4 Storm, 4 Color Change, and 4 Spy.
 - +2 and Swap are colored special cards; Storm, Color Change, and Spy are colorless wild cards.
 - The starting card is a random number card; a special card drawn as the starting card is returned to the draw pile and another card is drawn.
-- A random player takes the first turn; play continues clockwise in seat order.
+- A random connected player takes the first turn; play continues clockwise in seat order.
 - A player finishes when their hand is empty after the complete resolution of their turn. The first player to finish is the winner.
 - The match continues after the first winner until only one active player remains.
 - A finished player may remain as a spectator or leave.

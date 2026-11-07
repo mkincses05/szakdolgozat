@@ -148,6 +148,12 @@ export function setPresence(state: MatchState, userId: string, presence: Presenc
     next.currentPlayerId = userId;
   }
 
+  // A presence change alone leaves the game as it was, so an action sent for the current version
+  // stays valid; it is still validated against the new presence. Handing the turn to a
+  // reconnecting player is a new version.
+  if (next.currentPlayerId === state.currentPlayerId) {
+    return { ok: true, state: next, effects: [], privateEvents: [] };
+  }
   return commit(next, [], []);
 }
 

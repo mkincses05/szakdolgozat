@@ -148,6 +148,7 @@ export class RoomService {
         }),
         transport: this.options.transport,
         scheduler: this.options.scheduler,
+        logger: this.options.logger,
         turnTimeoutMs: this.options.turnTimeoutMs,
         recipients: () => room.members,
         onEnded: () => this.endMatch(room)
@@ -175,13 +176,18 @@ export class RoomService {
   }
 
   /** Reconnects a session within the grace period (R23) and resends the current state. */
-  resume(token: string, bind: BindSession): Ack<SessionInfo> {
+  resume(currentUserId: string | null, token: string, bind: BindSession): Ack<SessionInfo> {
     const session = this.sessions.findByToken(token);
     if (session === "expired") {
       return { ok: false, code: "session_expired" };
     }
     if (!session) {
       return { ok: false, code: "invalid_reconnect_token" };
+    }
+    // A connection carries one session. Resuming the same session again (a retry after a lost
+    // acknowledgement) is allowed; taking over another one would leave the first one bound here.
+    if (currentUserId !== null && currentUserId !== session.userId && this.sessions.get(currentUserId)) {
+      return { ok: false, code: "already_in_room" };
     }
 
     const room = this.rooms.get(session.roomCode)!;

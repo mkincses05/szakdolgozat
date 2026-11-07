@@ -47,7 +47,7 @@ The frontend contains no game logic. It does not implement game rules, resolve c
 
 Two kinds of local computation and state are allowed, because they do not affect the game:
 
-- presentation calculations, such as the countdown from `turnDeadline`, arranging the players around the table, sorting, and formatting;
+- presentation calculations, such as the countdown from `turnDeadline`, corrected by the server clock (`serverTime`), arranging the players around the table, sorting, and formatting;
 - interface state, such as the selected cards, open dialogs, hover and focus, and queued animations.
 
 Local game state is not allowed: the frontend never changes the hand, the top card, the current player, or any other game value before the server confirms it (no optimistic updates), and it keeps no separate copy of the match state. If the server rejects an action, for example with `stale_state`, the frontend shows the translated error code and waits for the next state.

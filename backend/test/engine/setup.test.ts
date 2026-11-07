@@ -51,6 +51,31 @@ describe("createMatch", () => {
     expect(firstPlayers.size).toBe(4);
   });
 
+  it("R3, R23: the first player is never a disconnected member", () => {
+    for (let seed = 0; seed < 50; seed++) {
+      const result = createMatch(
+        { matchId: "m", userIds: userIds(4), disconnectedUserIds: ["p0", "p2"] },
+        createSeededRng(seed)
+      );
+      if (!result.ok) throw new Error(result.code);
+      expect(["p1", "p3"]).toContain(result.state.currentPlayerId);
+      expect(result.state.players.map((player) => player.presence)).toEqual([
+        "disconnected",
+        "connected",
+        "disconnected",
+        "connected"
+      ]);
+    }
+  });
+
+  it("R23: without a connected player, nobody has the turn yet", () => {
+    const result = createMatch(
+      { matchId: "m", userIds: userIds(2), disconnectedUserIds: ["p0", "p1"] },
+      createSeededRng(1)
+    );
+    expect(result.ok && result.state.currentPlayerId).toBeNull();
+  });
+
   it("is deterministic for the same seed", () => {
     const first = createMatch({ matchId: "m", userIds: userIds(5) }, createSeededRng(42));
     const second = createMatch({ matchId: "m", userIds: userIds(5) }, createSeededRng(42));

@@ -47,6 +47,8 @@ export interface PublicMatchView {
   drawPileSize: number;
   /** Epoch milliseconds, `null` when no turn is running. */
   turnDeadline: number | null;
+  /** Server clock in epoch milliseconds when the view was sent, so clients can correct their own clock. */
+  serverTime: number;
   /** User IDs in finishing order. */
   finishingOrder: string[];
   stateVersion: number;

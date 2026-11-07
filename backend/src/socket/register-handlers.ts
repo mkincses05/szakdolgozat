@@ -135,7 +135,7 @@ export function registerHandlers(
     on("room:start", (payload) => withSession((userId) => roomService.startMatch(userId, payload.actionId)));
     on("game:play", (payload) => withSession((userId) => roomService.play(userId, payload)));
     on("game:draw", (payload) => withSession((userId) => roomService.draw(userId, payload)));
-    on("session:resume", (payload) => roomService.resume(payload.reconnectToken, bind));
+    on("session:resume", (payload) => roomService.resume(socket.data.userId, payload.reconnectToken, bind));
 
     socket.on("disconnect", () => {
       const userId = socket.data.userId;

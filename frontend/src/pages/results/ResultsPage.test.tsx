@@ -44,6 +44,7 @@ const endedMatch = {
   pendingPenalty: 0,
   drawPileSize: 10,
   turnDeadline: null,
+  serverTime: 0,
   finishingOrder: ["u2"],
   stateVersion: 40,
   hand: []

@@ -46,7 +46,9 @@ function matchView(overrides: Partial<PlayerMatchView> = {}): PlayerMatchView {
     activeColor: null,
     pendingPenalty: 0,
     drawPileSize: 80,
-    turnDeadline: Date.now() + 30_000,
+    // The client clock is 20 s ahead of the server's: the countdown must still show 30 s.
+    serverTime: Date.now() - 20_000,
+    turnDeadline: Date.now() - 20_000 + 30_000,
     finishingOrder: [],
     stateVersion: 4,
     hand: [red7, blue7, red3, green5, storm, bluePlus2],

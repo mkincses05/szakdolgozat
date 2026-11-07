@@ -190,6 +190,21 @@ describe("Socket.IO protocol", () => {
     expect(await replacement.waitFor("room:state")).toMatchObject({ members: [{ presence: "connected" }] });
   });
 
+  it("does not let a connection with a session take over another session", async () => {
+    const url = await startServer();
+    const { host, session } = await createRoom(url);
+    const guest = await client(url);
+    const joined = await guest.emit("room:join", { ...action(), roomCode: session.roomCode, displayName: "Guest" });
+
+    expect(await host.emit("session:resume", { reconnectToken: joined.data!.reconnectToken })).toEqual({
+      ok: false,
+      code: "already_in_room"
+    });
+    // Resuming the connection's own session again is a harmless retry.
+    expect((await host.emit("session:resume", { reconnectToken: session.reconnectToken })).ok).toBe(true);
+    expect(guest.socket.connected).toBe(true);
+  });
+
   it("rejects a resume after the grace period has expired", async () => {
     const url = await startServer(100);
     const { session } = await createRoom(url);

@@ -15,12 +15,14 @@ export interface MatchSetup {
   matchId: string;
   /** User IDs in seat order. */
   userIds: string[];
+  /** Members who are within their reconnect grace period when the match starts (R23). */
+  disconnectedUserIds?: readonly string[];
 }
 
 export type CreateMatchResult = { ok: true; state: MatchState } | { ok: false; code: ErrorCode };
 
 export function createMatch(setup: MatchSetup, rng: Rng): CreateMatchResult {
-  const { matchId, userIds } = setup;
+  const { matchId, userIds, disconnectedUserIds = [] } = setup;
 
   if (userIds.length < MIN_PLAYERS) {
     return { ok: false, code: "not_enough_players" };
@@ -40,7 +42,7 @@ export function createMatch(setup: MatchSetup, rng: Rng): CreateMatchResult {
     seat,
     hand: [],
     matchStatus: "active",
-    presence: "connected",
+    presence: disconnectedUserIds.includes(userId) ? "disconnected" : "connected",
     finishPosition: null,
     isBot: false
   }));
@@ -58,7 +60,10 @@ export function createMatch(setup: MatchSetup, rng: Rng): CreateMatchResult {
     startingCard = drawPile.pop()!;
   }
 
-  const firstPlayer = players[rng.nextInt(0, players.length - 1)];
+  // R3, R23: the first player is a random connected player. With nobody connected, the turn goes to
+  // the first player who reconnects.
+  const connected = players.filter((player) => player.presence === "connected");
+  const firstPlayer = connected.length > 0 ? connected[rng.nextInt(0, connected.length - 1)] : null;
 
   return {
     ok: true,
@@ -66,7 +71,7 @@ export function createMatch(setup: MatchSetup, rng: Rng): CreateMatchResult {
       id: matchId,
       phase: "awaiting_action",
       players,
-      currentPlayerId: firstPlayer.userId,
+      currentPlayerId: firstPlayer?.userId ?? null,
       drawPile,
       discardPile: [startingCard],
       removedCards: [],

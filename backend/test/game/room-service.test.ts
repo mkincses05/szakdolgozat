@@ -108,6 +108,8 @@ describe("starting a match", () => {
       expect(view.players.map((player) => player.handSize)).toEqual([7, 7, 7]);
       expect(view.players.map((player) => player.displayName)).toEqual(["Player 1", "Player 2", "Player 3"]);
       expect(view.turnDeadline).toBe(TURN_TIMEOUT_MS);
+      // The fake clock starts at 0, so the server time is sent alongside the deadline.
+      expect(view.serverTime).toBe(0);
     }
 
     // No message to a user contains a card of another player's hand.
@@ -154,6 +156,18 @@ describe("gameplay actions", () => {
 
     expect(service.draw(currentPlayerId, payload)).toEqual({ ok: true });
     expect(transport.messages).toHaveLength(messageCount);
+  });
+
+  it("accepts an action sent before another player's connection changed", () => {
+    const { members, currentPlayerId, service, transport } = startedRoom(3);
+    const stateVersion = transport.last(currentPlayerId, "game:state").stateVersion;
+    const other = members.find((member) => member.userId !== currentPlayerId)!;
+
+    service.disconnect(other.userId);
+    const view = transport.last(currentPlayerId, "game:state");
+    expect(view.players.find((player) => player.userId === other.userId)?.presence).toBe("disconnected");
+
+    expect(service.draw(currentPlayerId, { actionId: nextActionId(), stateVersion })).toEqual({ ok: true });
   });
 
   it("rejects a stale state version", () => {

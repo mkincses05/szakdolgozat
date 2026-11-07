@@ -29,7 +29,7 @@ Compared with these games, Wildhand combines:
 
 - **R1 – Player count**: a match supports 2–8 players. The server validates the limit.
 - **R2 – Deck**: the base deck contains 104 cards: 80 number cards (4 colors × numbers 0–9 × 2 copies), 8 +2 (2 per color), 4 Swap (1 per color), 4 Storm, 4 Color Change, and 4 Spy. +2 and Swap are **colored special cards**. Storm, Color Change, and Spy are **wild cards** with no color. Special cards have no number.
-- **R3 – Dealing**: each player receives 7 cards. The starting card is a random number card; a special card drawn as the starting card is returned to the draw pile at a random position and another card is drawn. A random player takes the first turn, and play continues clockwise in seat order.
+- **R3 – Dealing**: each player receives 7 cards. The starting card is a random number card; a special card drawn as the starting card is returned to the draw pile at a random position and another card is drawn. A random connected player takes the first turn, and play continues clockwise in seat order. A member who is within the reconnect grace period when the match starts (R23) is not selected; if nobody is connected, the first player to reconnect takes the turn.
 
 ### Legal plays
 

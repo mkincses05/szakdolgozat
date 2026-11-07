@@ -9,7 +9,7 @@ interface TurnInfoProps {
 
 export function TurnInfo({ view, userId }: TurnInfoProps) {
   const { t } = useTranslation("game");
-  const secondsLeft = useCountdown(view.turnDeadline);
+  const secondsLeft = useCountdown(view.turnDeadline, view.serverTime);
   const current = view.players.find((player) => player.userId === view.currentPlayerId);
 
   if (!current) {

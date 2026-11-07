@@ -186,7 +186,7 @@ Only number cards can form a combo. Special cards are always played one per turn
 
 1. Each player receives **7 cards**.
 2. A random **number card** is placed face-up as the starting card.
-3. A random player takes the first turn, and play continues clockwise.
+3. A random connected player takes the first turn, and play continues clockwise.
 
 The starting card is always a number card, so the game does not begin with an active special-card effect.
 

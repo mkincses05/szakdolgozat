@@ -142,7 +142,7 @@ function checkInvariants(before: MatchState, result: EngineResult): void {
 
   // The legal cards computed by clients from their own view match the engine's.
   if (state.currentPlayerId !== null) {
-    const view = toMatchView(state, state.currentPlayerId, { displayName: (id) => id, turnDeadline: null });
+    const view = toMatchView(state, state.currentPlayerId, { displayName: (id) => id, turnDeadline: null, serverTime: 0 });
     const engineLegal = findPlayer(state, state.currentPlayerId)!.hand.filter((card) =>
       isLegalCard(card, state, state.currentPlayerId!)
     );

@@ -52,6 +52,7 @@ function view(hand: Card[], overrides: Partial<PlayerMatchView> = {}): PlayerMat
     pendingPenalty: 0,
     drawPileSize: 50,
     turnDeadline: null,
+    serverTime: 0,
     finishingOrder: [],
     stateVersion: 3,
     ...overrides
