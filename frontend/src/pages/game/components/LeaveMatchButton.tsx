@@ -11,7 +11,8 @@ export function LeaveMatchButton({ forfeits }: { forfeits: boolean }) {
 
   return (
     <section className="flex flex-col gap-2">
-      {confirming ? (
+      {/* A player who finishes while confirming no longer forfeits by leaving. */}
+      {confirming && forfeits ? (
         <>
           <p>{t("leave.warning")}</p>
           <div className="flex gap-2">

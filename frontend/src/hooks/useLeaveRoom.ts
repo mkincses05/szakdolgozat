@@ -1,24 +1,19 @@
 // Sends `room:leave` and forgets the session once the server has removed the player.
 
-import { useState } from "react";
+import { sendAction } from "../services/actions";
+import { useAction } from "./useAction";
 import { useServerState } from "./useServerState";
-import { sendAction, type ActionErrorCode } from "../services/actions";
 
 export function useLeaveRoom() {
   const { endSession } = useServerState();
-  const [pending, setPending] = useState(false);
-  const [error, setError] = useState<ActionErrorCode | null>(null);
+  const { run, pending, error } = useAction();
 
   const leaveRoom = async () => {
-    setError(null);
-    setPending(true);
-    const ack = await sendAction("room:leave", {});
-    setPending(false);
     // `not_in_room`: the server no longer knows the session, so there is nothing to leave.
-    if (ack.ok || ack.code === "not_in_room") {
+    const left = (ack: { ok: boolean; code?: string }) => ack.ok || ack.code === "not_in_room";
+    const ack = await run(() => sendAction("room:leave", {}), left);
+    if (left(ack)) {
       endSession();
-    } else {
-      setError(ack.code);
     }
   };
 

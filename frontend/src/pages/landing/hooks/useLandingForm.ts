@@ -3,8 +3,9 @@
 
 import { displayNameSchema, roomCodeSchema } from "@wildhand/shared";
 import { useState } from "react";
+import { useAction } from "../../../hooks/useAction";
 import { useServerState } from "../../../hooks/useServerState";
-import { sendAction, type ActionErrorCode, type ActionResult } from "../../../services/actions";
+import { sendAction, type ActionResult } from "../../../services/actions";
 
 export type LandingValidationError = "displayName" | "roomCode";
 
@@ -13,13 +14,12 @@ export function useLandingForm() {
   const [displayName, setDisplayName] = useState("");
   const [roomCode, setRoomCode] = useState("");
   const [validationError, setValidationError] = useState<LandingValidationError | null>(null);
-  const [actionError, setActionError] = useState<ActionErrorCode | null>(null);
-  const [pending, setPending] = useState(false);
+  const { run, pending, error: actionError, clearError } = useAction();
 
   /** Returns the trimmed name, or `null` after showing the validation error. */
   const validName = (): string | null => {
     setValidationError(null);
-    setActionError(null);
+    clearError();
     const parsed = displayNameSchema.safeParse(displayName);
     if (!parsed.success) {
       setValidationError("displayName");
@@ -28,21 +28,17 @@ export function useLandingForm() {
     return parsed.data;
   };
 
-  const enter = async (request: Promise<ActionResult<"room:create" | "room:join">>) => {
-    setPending(true);
-    const ack = await request;
-    setPending(false);
+  const enter = async (request: () => Promise<ActionResult<"room:create" | "room:join">>) => {
+    const ack = await run(request);
     if (ack.ok) {
       startSession(ack.data);
-    } else {
-      setActionError(ack.code);
     }
   };
 
   const createRoom = () => {
     const name = validName();
     if (name !== null) {
-      void enter(sendAction("room:create", { displayName: name }));
+      void enter(() => sendAction("room:create", { displayName: name }));
     }
   };
 
@@ -56,7 +52,7 @@ export function useLandingForm() {
       setValidationError("roomCode");
       return;
     }
-    void enter(sendAction("room:join", { roomCode: code.data, displayName: name }));
+    void enter(() => sendAction("room:join", { roomCode: code.data, displayName: name }));
   };
 
   return {

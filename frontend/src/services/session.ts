@@ -5,6 +5,7 @@
 import type { SessionInfo } from "@wildhand/shared";
 
 const STORAGE_KEY = "wildhand.session";
+const DISMISSED_RESULTS_KEY = "wildhand.dismissedResults";
 
 function isSessionInfo(value: unknown): value is SessionInfo {
   if (typeof value !== "object" || value === null) {
@@ -35,7 +36,29 @@ export function saveSession(session: SessionInfo): void {
 export function clearSession(): void {
   try {
     sessionStorage.removeItem(STORAGE_KEY);
+    sessionStorage.removeItem(DISMISSED_RESULTS_KEY);
   } catch {
     // Nothing is stored when storage is unavailable.
+  }
+}
+
+/** The match whose results the player has closed; the server resends them after a reload. */
+export function loadDismissedMatchId(): string | null {
+  try {
+    return sessionStorage.getItem(DISMISSED_RESULTS_KEY);
+  } catch {
+    return null;
+  }
+}
+
+export function saveDismissedMatchId(matchId: string | null): void {
+  try {
+    if (matchId === null) {
+      sessionStorage.removeItem(DISMISSED_RESULTS_KEY);
+    } else {
+      sessionStorage.setItem(DISMISSED_RESULTS_KEY, matchId);
+    }
+  } catch {
+    // Without storage the closed results come back after a reload.
   }
 }

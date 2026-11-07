@@ -20,7 +20,12 @@ export function CurrentPage() {
         </>
       );
     case "loading":
-      return <p>{t("common:status.loading")}</p>;
+      return (
+        <>
+          <ErrorMessage code={state.sessionError} />
+          <p>{t("common:status.loading")}</p>
+        </>
+      );
     case "lobby":
       return <LobbyPage />;
     case "game":

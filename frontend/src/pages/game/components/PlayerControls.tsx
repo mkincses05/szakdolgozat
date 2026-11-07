@@ -14,8 +14,7 @@ export function PlayerControls({ view }: { view: PlayerMatchView }) {
   const { t } = useTranslation("game");
   const selection = useCardSelection(view);
   const actions = useGameActions(view.stateVersion);
-  const first = view.hand.find((card) => card.id === selection.selectedIds[0]);
-  const play = usePlayOptions(view, first);
+  const play = usePlayOptions(view, selection.first);
 
   return (
     <section className="flex flex-col gap-2">

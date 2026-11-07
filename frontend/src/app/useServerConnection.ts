@@ -5,9 +5,17 @@ import type { MatchResults, MatchView, RoomView, SessionInfo } from "@wildhand/s
 import { useCallback, useEffect, useMemo, useState } from "react";
 import type { ConnectionStatus, ServerStateValue } from "../hooks/useServerState";
 import { resumeSession, type ActionErrorCode } from "../services/actions";
-import { clearSession, loadSession, saveSession } from "../services/session";
+import {
+  clearSession,
+  loadDismissedMatchId,
+  loadSession,
+  saveDismissedMatchId,
+  saveSession
+} from "../services/session";
 import type { Socket } from "socket.io-client";
 import { socket } from "../services/socket";
+
+const RESUME_RETRY_MS = 2_000;
 
 export function useServerConnection(): ServerStateValue {
   const [connection, setConnection] = useState<ConnectionStatus>("connecting");
@@ -15,7 +23,7 @@ export function useServerConnection(): ServerStateValue {
   const [room, setRoom] = useState<RoomView | null>(null);
   const [match, setMatch] = useState<MatchView | null>(null);
   const [results, setResults] = useState<MatchResults | null>(null);
-  const [dismissedMatchId, setDismissedMatchId] = useState<string | null>(null);
+  const [dismissedMatchId, setDismissedMatchId] = useState<string | null>(loadDismissedMatchId);
   const [sessionError, setSessionError] = useState<ActionErrorCode | null>(null);
 
   const forgetSession = useCallback(() => {
@@ -28,8 +36,9 @@ export function useServerConnection(): ServerStateValue {
   }, []);
 
   useEffect(() => {
-    const onConnect = () => {
-      setConnection("connected");
+    let retryTimer: ReturnType<typeof setTimeout> | undefined;
+
+    const resume = () => {
       const stored = loadSession();
       if (!stored) {
         return;
@@ -39,16 +48,26 @@ export function useServerConnection(): ServerStateValue {
         if (ack.ok) {
           saveSession(ack.data);
           setSession(ack.data);
+          setSessionError(null);
           return;
         }
         setSessionError(ack.code);
         if (ack.code === "invalid_reconnect_token" || ack.code === "session_expired") {
           forgetSession();
+        } else if (socket.connected) {
+          // The server may still know the session (for example after a timeout), so try again.
+          retryTimer = setTimeout(resume, RESUME_RETRY_MS);
         }
       });
     };
 
+    const onConnect = () => {
+      setConnection("connected");
+      resume();
+    };
+
     const onDisconnect = (reason: Socket.DisconnectReason) => {
+      clearTimeout(retryTimer);
       // The server disconnects a socket only when the same session connects from another tab.
       setConnection(reason === "io server disconnect" ? "replaced" : "reconnecting");
     };
@@ -61,6 +80,7 @@ export function useServerConnection(): ServerStateValue {
     socket.connect();
 
     return () => {
+      clearTimeout(retryTimer);
       socket.off("connect", onConnect);
       socket.off("disconnect", onDisconnect);
       socket.off("room:state", setRoom);
@@ -76,8 +96,16 @@ export function useServerConnection(): ServerStateValue {
     setSessionError(null);
   }, []);
 
+  const endSession = useCallback(() => {
+    forgetSession();
+    setSessionError(null);
+  }, [forgetSession]);
+
   const dismissResults = useCallback(() => {
-    setDismissedMatchId(results?.matchId ?? null);
+    const matchId = results?.matchId ?? null;
+    // Stored with the session, so a reload does not bring back results the player has closed.
+    saveDismissedMatchId(matchId);
+    setDismissedMatchId(matchId);
   }, [results]);
 
   return useMemo(
@@ -90,9 +118,9 @@ export function useServerConnection(): ServerStateValue {
       dismissedMatchId,
       sessionError,
       startSession,
-      endSession: forgetSession,
+      endSession,
       dismissResults
     }),
-    [connection, session, room, match, results, dismissedMatchId, sessionError, startSession, forgetSession, dismissResults]
+    [connection, session, room, match, results, dismissedMatchId, sessionError, startSession, endSession, dismissResults]
   );
 }

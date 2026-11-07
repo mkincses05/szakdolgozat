@@ -14,11 +14,13 @@ export function selectPage(state: Pick<ServerState, "session" | "room" | "match"
   if (!room) {
     return "loading";
   }
-  if (room.state === "in_match") {
-    return match ? "game" : "loading";
+  // An ended match view is never shown as the game: when a new match starts, `room:state` arrives
+  // before its first `game:state`, and the last view still belongs to the previous match.
+  if (room.state === "in_match" && match && match.phase !== "ended") {
+    return "game";
   }
   if (results && results.matchId !== dismissedMatchId) {
     return "results";
   }
-  return "lobby";
+  return room.state === "in_match" ? "loading" : "lobby";
 }
