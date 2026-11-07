@@ -16,7 +16,7 @@ Around the engine, the backend has two more layers:
 - `backend/src/game/`: the room service (rooms, sessions, host transfer, reconnect grace periods, duplicate and stale actions) and the match controller (seed, turn timer, delivery of effects, private events, and personal views). It has no Socket.IO dependency; time comes from an injectable scheduler, and messages leave through a transport interface addressed to single users.
 - `backend/src/socket/`: the Socket.IO handlers, which validate payloads with the shared zod schemas, answer with acknowledgements, and route each message to the socket of its user.
 
-The server is configured with `PORT`, `CORS_ORIGIN`, `TURN_TIMEOUT_MS`, and `RECONNECT_GRACE_MS` (see `backend/.env.example`).
+The server is configured with `PORT`, `CORS_ORIGIN`, `TURN_TIMEOUT_MS`, `RECONNECT_GRACE_MS`, and `DATABASE_URL` (see `backend/.env.example`). `CORS_ORIGIN` must be the exact frontend origin (default `http://localhost:5173`), because the browser sends the login cookie with requests; `*` is rejected. With `NODE_ENV=production`, the login cookie is sent only over HTTPS.
 
 ## React + TypeScript
 
@@ -99,7 +99,7 @@ Express (version 5) is the backend web framework. It handles HTTP requests, rout
 
 In this project, Express is used for:
 
-- registration, login, and logout (planned)
+- the account API under `/api/auth`: registration, login, logout, and the own profile (`docs/03`)
 - serving profiles and statistics (planned)
 - health checks
 - hosting the Socket.IO server on the same HTTP server

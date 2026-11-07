@@ -8,7 +8,9 @@ import {
   type ClientToServerEvents,
   type ServerToClientEvents
 } from "@wildhand/shared";
-import type { RoomService } from "../game/room-service.js";
+import type { AuthService } from "../auth/auth-service.js";
+import { readLoginCookie } from "../auth/cookies.js";
+import type { RoomService, SessionAccount } from "../game/room-service.js";
 import { rememberAck } from "../game/sessions.js";
 import type { Transport } from "../game/transport.js";
 import type { Logger } from "../logger.js";
@@ -16,6 +18,11 @@ import type { Logger } from "../logger.js";
 export interface SocketData {
   /** The session bound to this socket, `null` before create, join, or resume. */
   userId: string | null;
+  /**
+   * The logged-in account, read from the login cookie when the socket connects; `null` for a guest.
+   * Logging in or out takes effect after the client reconnects.
+   */
+  account: SessionAccount | null;
 }
 
 export type WildhandServer = Server<ClientToServerEvents, ServerToClientEvents, Record<string, never>, SocketData>;
@@ -58,8 +65,23 @@ export function registerHandlers(
   io: WildhandServer,
   roomService: RoomService,
   transport: SocketTransport,
-  logger: Logger
+  logger: Logger,
+  auth: AuthService
 ): void {
+  io.use((socket, next) => {
+    socket.data.account = null;
+    void (async () => {
+      try {
+        const account = await auth.authenticate(readLoginCookie(socket.handshake.headers.cookie));
+        socket.data.account = account && { id: account.id, displayName: account.displayName };
+      } catch (error) {
+        // Without a reachable database the player still connects, as a guest.
+        logger.error("Looking up the account of a connection failed", error);
+      }
+      next();
+    })();
+  });
+
   io.on("connection", (socket) => {
     socket.data.userId = null;
 
@@ -118,12 +140,12 @@ export function registerHandlers(
     }
 
     on("room:create", (payload) =>
-      once(payload.actionId, () => roomService.createRoom(socket.data.userId, payload.displayName, bind))
+      once(payload.actionId, () => roomService.createRoom(socket.data.userId, payload.displayName, bind, socket.data.account))
     );
 
     on("room:join", (payload) =>
       once(payload.actionId, () =>
-        roomService.joinRoom(socket.data.userId, payload.roomCode, payload.displayName, bind)
+        roomService.joinRoom(socket.data.userId, payload.roomCode, payload.displayName, bind, socket.data.account)
       )
     );
 

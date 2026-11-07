@@ -1,5 +1,6 @@
 import dotenv from "dotenv";
 import { createWildhandServer } from "./app.js";
+import { createPgAccountStore } from "./auth/account-store.js";
 import { loadConfig } from "./config.js";
 import { checkDatabase, createPool } from "./db/pool.js";
 import { consoleLogger } from "./logger.js";
@@ -12,7 +13,8 @@ const pool = createPool(config.databaseUrl, consoleLogger);
 void checkDatabase(pool, consoleLogger);
 
 const app = createWildhandServer(config, {
-  results: pool ? createPgMatchResultStore(pool) : noopMatchResultStore
+  results: pool ? createPgMatchResultStore(pool) : noopMatchResultStore,
+  accounts: pool ? createPgAccountStore(pool) : null
 });
 
 app.httpServer.listen(config.port, () => {

@@ -119,6 +119,7 @@ The server applies the turn resolution contract from `docs/01` (section 6) atomi
 - Use typed and validated event payloads shared between the client and the server.
 - Keep the live match state in memory; when the match ends, write its result to PostgreSQL in one transaction (`docs/03`). Accepted actions are not stored.
 - Log rejected actions with their error code for debugging and balancing.
+- Read the login cookie when a socket connects: a logged-in player creates or joins rooms under the account's display name, and one account takes at most one seat in a room (`docs/03`, section 2).
 
 ## 8. Risks
 

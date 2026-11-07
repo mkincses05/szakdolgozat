@@ -50,6 +50,12 @@ export interface RoomServiceOptions {
   results?: MatchResultStore;
 }
 
+/** A logged-in player; guests have no account. Registered players use their account name (docs/03). */
+export interface SessionAccount {
+  id: string;
+  displayName: string;
+}
+
 /** Called before any message is sent, so the caller can route messages for the new user. */
 export type BindSession = (userId: string) => void;
 
@@ -74,7 +80,12 @@ export class RoomService {
     this.sessions = new SessionRegistry(this.random);
   }
 
-  createRoom(currentUserId: string | null, displayName: string, bind: BindSession): Ack<SessionInfo> {
+  createRoom(
+    currentUserId: string | null,
+    displayName: string,
+    bind: BindSession,
+    account: SessionAccount | null = null
+  ): Ack<SessionInfo> {
     if (currentUserId !== null && this.sessions.get(currentUserId)) {
       return { ok: false, code: "already_in_room" };
     }
@@ -84,7 +95,7 @@ export class RoomService {
       code = this.random.roomCode();
     }
 
-    const session = this.sessions.create(displayName, code);
+    const session = this.sessions.create(account?.displayName ?? displayName, code, account?.id ?? null);
     const room: Room = { code, state: "lobby", hostUserId: session.userId, members: [session.userId], match: null };
     this.rooms.set(code, room);
 
@@ -93,7 +104,13 @@ export class RoomService {
     return { ok: true, data: sessionInfo(session) };
   }
 
-  joinRoom(currentUserId: string | null, roomCode: string, displayName: string, bind: BindSession): Ack<SessionInfo> {
+  joinRoom(
+    currentUserId: string | null,
+    roomCode: string,
+    displayName: string,
+    bind: BindSession,
+    account: SessionAccount | null = null
+  ): Ack<SessionInfo> {
     if (currentUserId !== null && this.sessions.get(currentUserId)) {
       return { ok: false, code: "already_in_room" };
     }
@@ -109,8 +126,12 @@ export class RoomService {
     if (room.members.length >= MAX_PLAYERS) {
       return { ok: false, code: "room_full" };
     }
+    // One account is one player: it cannot take two seats, and its result is stored once.
+    if (account && room.members.some((memberId) => this.sessions.get(memberId)?.accountId === account.id)) {
+      return { ok: false, code: "account_already_in_room" };
+    }
 
-    const session = this.sessions.create(displayName, room.code);
+    const session = this.sessions.create(account?.displayName ?? displayName, room.code, account?.id ?? null);
     room.members.push(session.userId);
 
     bind(session.userId);
@@ -148,7 +169,12 @@ export class RoomService {
         seed: this.random.seed(),
         players: room.members.map((memberId) => {
           const member = this.sessions.get(memberId)!;
-          return { userId: member.userId, displayName: member.displayName, connected: member.connected };
+          return {
+            userId: member.userId,
+            displayName: member.displayName,
+            accountId: member.accountId,
+            connected: member.connected
+          };
         }),
         transport: this.options.transport,
         scheduler: this.options.scheduler,

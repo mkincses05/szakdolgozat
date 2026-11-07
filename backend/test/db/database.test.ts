@@ -5,6 +5,8 @@ import dotenv from "dotenv";
 import { Client, DatabaseError, Pool } from "pg";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { loadMigrations, migrate } from "../../src/db/migrate.js";
+import { createPgAccountStore } from "../../src/auth/account-store.js";
+import { hashLoginToken } from "../../src/auth/credentials.js";
 import { createPgMatchResultStore, type MatchRecord } from "../../src/persistence/match-result-store.js";
 
 dotenv.config({ quiet: true });
@@ -272,6 +274,58 @@ describe.skipIf(!testDatabaseUrl)("PostgreSQL", () => {
       await expect(
         store.save(record({}, [player(0, { finishPosition: null }), player(1, {})]))
       ).rejects.toMatchObject({ code: "23514" });
+    });
+  });
+  describe("account store", () => {
+    const appPool = new Pool({ connectionString: testDatabaseUrl, options: "-c role=wildhand_app" });
+    const accounts = createPgAccountStore(appPool);
+    const account = { username: "Store_User", email: "Store.User@example.com", displayName: "Store", passwordHash: "$argon2id$hash" };
+
+    afterAll(async () => {
+      await appPool.end();
+    });
+
+    it("creates an account with its credentials and finds it by username or email in any case", async () => {
+      const created = await accounts.createAccount(account);
+      expect(created).toMatchObject({ username: "Store_User", displayName: "Store", xp: 0, matchesPlayed: 0, wins: 0, forfeits: 0 });
+
+      const byName = await accounts.findByLogin("store_user");
+      const byEmail = await accounts.findByLogin("STORE.USER@example.com");
+      expect(byName?.passwordHash).toBe("$argon2id$hash");
+      expect(byEmail?.profile).toEqual(created);
+      expect(await accounts.findByLogin("nobody")).toBeNull();
+      expect(await accounts.getProfile((created as { id: string }).id)).toEqual(created);
+    });
+
+    it("reports a taken username or email and stores nothing", async () => {
+      expect(await accounts.createAccount({ ...account, email: "new@example.com", username: "STORE_USER" })).toBe("username_taken");
+      expect(await accounts.createAccount({ ...account, username: "new_user", email: "store.user@EXAMPLE.com" })).toBe("email_taken");
+      expect(await accounts.findByLogin("new_user")).toBeNull();
+    });
+
+    it("finds a session only until it expires, extends it, and deletes it", async () => {
+      const { profile } = (await accounts.findByLogin("store_user"))!;
+      const token = hashLoginToken("session-token");
+      const now = new Date("2026-11-07T12:00:00Z");
+
+      await accounts.createSession(profile.id, token, new Date("2026-11-08T12:00:00Z"));
+      expect(await accounts.findSession(token, now)).toMatchObject({ userId: profile.id, displayName: "Store" });
+      expect(await accounts.findSession(token, new Date("2026-11-08T12:00:00Z"))).toBeNull();
+
+      await accounts.extendSession(token, now, new Date("2026-12-07T12:00:00Z"));
+      expect(await accounts.findSession(token, new Date("2026-11-20T12:00:00Z"))).toMatchObject({
+        lastUsedAt: now,
+        expiresAt: new Date("2026-12-07T12:00:00Z")
+      });
+
+      await accounts.deleteExpiredSessions(profile.id, new Date("2026-11-20T12:00:00Z"));
+      expect(await accounts.findSession(token, now)).not.toBeNull();
+      await accounts.deleteExpiredSessions(profile.id, new Date("2027-01-01T00:00:00Z"));
+      expect(await accounts.findSession(token, now)).toBeNull();
+
+      await accounts.createSession(profile.id, token, new Date("2026-11-08T12:00:00Z"));
+      await accounts.deleteSession(token);
+      expect(await accounts.findSession(token, now)).toBeNull();
     });
   });
 });

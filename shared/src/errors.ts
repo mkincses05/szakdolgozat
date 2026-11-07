@@ -9,6 +9,13 @@ export const ERROR_CODES = [
   "invalid_reconnect_token",
   "session_expired",
 
+  "database_unavailable",
+  "username_taken",
+  "email_taken",
+  "invalid_credentials",
+  "not_logged_in",
+  "account_already_in_room",
+
   "room_not_found",
   "room_full",
   "room_in_match",

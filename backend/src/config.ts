@@ -2,7 +2,10 @@ import { DEFAULT_RECONNECT_GRACE_MS, DEFAULT_TURN_TIMEOUT_MS } from "@wildhand/s
 
 export interface ServerConfig {
   port: number;
+  /** The frontend origin; the login cookie requires an exact origin instead of `*`. */
   corsOrigin: string;
+  /** Sends the login cookie only over HTTPS; on in production. */
+  secureCookies: boolean;
   /** R22 */
   turnTimeoutMs: number;
   /** R23 */
@@ -24,11 +27,19 @@ function integer(value: string | undefined, fallback: number, name: string, min:
   return parsed;
 }
 
+function origin(value: string | undefined): string {
+  if (value === "*") {
+    throw new Error("CORS_ORIGIN must be the exact frontend origin, for example http://localhost:5173, not *");
+  }
+  return value || "http://localhost:5173";
+}
+
 export function loadConfig(env: NodeJS.ProcessEnv = process.env): ServerConfig {
   return {
     // 0 lets the operating system pick a free port.
     port: integer(env.PORT, 3000, "PORT", 0),
-    corsOrigin: env.CORS_ORIGIN || "*",
+    corsOrigin: origin(env.CORS_ORIGIN),
+    secureCookies: env.NODE_ENV === "production",
     // A zero timer would end every turn, or forfeit every disconnect, immediately.
     turnTimeoutMs: integer(env.TURN_TIMEOUT_MS, DEFAULT_TURN_TIMEOUT_MS, "TURN_TIMEOUT_MS", 1),
     reconnectGraceMs: integer(env.RECONNECT_GRACE_MS, DEFAULT_RECONNECT_GRACE_MS, "RECONNECT_GRACE_MS", 1),

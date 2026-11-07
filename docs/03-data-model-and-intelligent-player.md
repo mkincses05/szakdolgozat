@@ -94,7 +94,24 @@ A registered player earns 10 XP for a match plus 10 XP for every player who fini
 
 ### Authentication
 
-Login uses server-side sessions instead of JWT, so logging out really revokes access and no signing secret is needed. The server issues a random token and stores only its hash in `auth_sessions`; logging out deletes the row, and expired rows are removed periodically. This login session is separate from the in-memory reconnect token that keeps a player in a match.
+Login uses server-side sessions instead of JWT, so logging out really revokes access and no signing secret is needed. This login session is separate from the in-memory reconnect token that keeps a player in a match.
+
+- Registration needs a username (3–32 letters, digits, `.`, `_`, or `-`, never `@`), an email address, a display name, and a password of 8–128 characters. Usernames and emails are unique regardless of case. Registering also logs the user in.
+- A user logs in with the username or the email address; a value containing `@` is treated as an email. A wrong username, email, or password gives the same `invalid_credentials` answer.
+- Passwords are stored as argon2id hashes in `user_credentials`.
+- The server issues a random 32-byte token and stores only its SHA-256 hash in `auth_sessions`. The browser receives the token in the `wildhand_session` cookie, which is `HttpOnly`, `SameSite=Lax`, and `Secure` in production.
+- A session expires after 30 days without use. Using it moves the expiry to 30 days later, at most once a day. Logging out deletes the row; expired rows of a user are deleted when that user logs in.
+- The Socket.IO connection reads the cookie when it connects. A logged-in player joins rooms under the account's display name instead of the typed name, and one account can take only one seat in a room (`account_already_in_room`). Logging in or out takes effect when the client reconnects.
+- Without a database, the account API answers `database_unavailable` and every player plays as a guest.
+
+The account API is served by Express under `/api/auth`; every response has the shape of a Socket.IO acknowledgement (`{ ok: true, data }` or `{ ok: false, code }`):
+
+| Request | Result |
+| --- | --- |
+| `POST /api/auth/register` | 201 with the profile and the cookie; 400 `invalid_payload`, 409 `username_taken` or `email_taken` |
+| `POST /api/auth/login` | 200 with the profile and the cookie; 401 `invalid_credentials` |
+| `POST /api/auth/logout` | 200; deletes the session and the cookie |
+| `GET /api/auth/me` | 200 with the own profile (username, email, display name, XP, matches played, wins, forfeits); 401 `not_logged_in` |
 
 ### Access rights and backups
 

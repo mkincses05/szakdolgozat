@@ -418,3 +418,39 @@ describe("storing results (docs/03 section 2)", () => {
     expect(start(host.userId)).toEqual({ ok: true });
   });
 });
+
+describe("registered players (docs/03 section 2)", () => {
+  const anna = { id: "account-anna", displayName: "Anna" };
+
+  it("uses the account name instead of the typed name and stores the result for the account", async () => {
+    const records: MatchRecord[] = [];
+    const context = setup(5, { results: { save: async (record) => void records.push(record) } });
+    const host = expectOkAck(context.service.createRoom(null, "Typed name", () => {}, anna));
+    const guest = context.join(host.roomCode, "Guest");
+
+    expect(context.transport.last(host.userId, "room:state").members.map((member) => member.displayName)).toEqual([
+      "Anna",
+      "Guest"
+    ]);
+
+    expectOkAck(context.start(host.userId));
+    expectOkAck(context.service.leaveRoom(guest.userId, nextActionId()));
+    await context.service.flushResults();
+
+    expect(records[0].players).toEqual([
+      expect.objectContaining({ kind: "registered", accountId: "account-anna", displayName: "Anna", xpEarned: 20 }),
+      expect.objectContaining({ kind: "guest", accountId: null, displayName: "Guest", xpEarned: 0 })
+    ]);
+  });
+
+  it("does not seat the same account twice in a room", () => {
+    const { service, create } = setup();
+    const host = create("Host");
+
+    expectOkAck(service.joinRoom(null, host.roomCode, "Tab 1", () => {}, anna));
+    expect(service.joinRoom(null, host.roomCode, "Tab 2", () => {}, anna)).toEqual({
+      ok: false,
+      code: "account_already_in_room"
+    });
+  });
+});

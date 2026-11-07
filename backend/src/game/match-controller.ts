@@ -34,7 +34,7 @@ export interface MatchControllerOptions {
   matchId: string;
   seed: number;
   /** In seat order. */
-  players: { userId: string; displayName: string; connected: boolean }[];
+  players: { userId: string; displayName: string; accountId: string | null; connected: boolean }[];
   transport: Transport;
   scheduler: Scheduler;
   logger: Logger;
@@ -50,6 +50,7 @@ export class MatchController {
   private state: MatchState;
   private readonly rng: Rng;
   private readonly displayNames: Map<string, string>;
+  private readonly accountIds: Map<string, string | null>;
   private readonly startedAt: number;
   private turnTimer: TimerHandle | null = null;
   private turnDeadline: number | null = null;
@@ -82,6 +83,7 @@ export class MatchController {
     this.state = state;
     this.rng = rng;
     this.displayNames = new Map(options.players.map((player) => [player.userId, player.displayName]));
+    this.accountIds = new Map(options.players.map((player) => [player.userId, player.accountId]));
     this.startedAt = options.scheduler.now();
   }
 
@@ -145,12 +147,13 @@ export class MatchController {
     const standings = results?.standings ?? [];
 
     const players = this.state.players.map((player) => {
-      const kind = playerKind();
+      const accountId = this.accountIds.get(player.userId) ?? null;
+      const kind: PlayerKind = accountId === null ? "guest" : "registered";
       const standing = standings.find((entry) => entry.userId === player.userId);
       return {
         seat: player.seat,
         kind,
-        accountId: null,
+        accountId,
         displayName: this.displayNames.get(player.userId) ?? player.userId,
         finalStatus: player.matchStatus,
         finishPosition: player.finishPosition,
@@ -276,9 +279,4 @@ export class MatchController {
     }
     this.turnDeadline = null;
   }
-}
-
-/** Every human plays as a guest until accounts exist (docs/03 section 2); bots are not seated yet. */
-function playerKind(): PlayerKind {
-  return "guest";
 }

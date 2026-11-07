@@ -6,7 +6,8 @@ describe("loadConfig", () => {
   it("uses the defaults when nothing is set", () => {
     expect(loadConfig({})).toEqual({
       port: 3000,
-      corsOrigin: "*",
+      corsOrigin: "http://localhost:5173",
+      secureCookies: false,
       turnTimeoutMs: DEFAULT_TURN_TIMEOUT_MS,
       reconnectGraceMs: DEFAULT_RECONNECT_GRACE_MS,
       databaseUrl: null
@@ -25,10 +26,16 @@ describe("loadConfig", () => {
     ).toEqual({
       port: 0,
       corsOrigin: "http://localhost:5173",
+      secureCookies: false,
       turnTimeoutMs: 30_000,
       reconnectGraceMs: 1,
       databaseUrl: "postgres://wildhand_app:secret@localhost:5432/wildhand"
     });
+  });
+
+  it("requires an exact CORS origin and secure cookies in production", () => {
+    expect(() => loadConfig({ CORS_ORIGIN: "*" })).toThrow("CORS_ORIGIN");
+    expect(loadConfig({ NODE_ENV: "production" }).secureCookies).toBe(true);
   });
 
   it("runs without a database when DATABASE_URL is empty", () => {
