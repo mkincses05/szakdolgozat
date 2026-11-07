@@ -33,7 +33,7 @@ export const HAND_LIMIT = 20;
 export const RESHUFFLE_THRESHOLD = 25;
 
 /** R22: default turn time limit. */
-export const DEFAULT_TURN_TIMEOUT_MS = 60_000;
+export const DEFAULT_TURN_TIMEOUT_MS = 30_000;
 /** R23: default reconnect grace period. */
 export const DEFAULT_RECONNECT_GRACE_MS = 60_000;
 

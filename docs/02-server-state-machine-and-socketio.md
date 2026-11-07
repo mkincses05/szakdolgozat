@@ -91,7 +91,7 @@ All values are configurable; the defaults are:
 
 | Timer | Default | On expiry |
 | --- | ---: | --- |
-| Turn timer | 60 s | Draw the pending +2 penalty, otherwise draw one card or pass (R22). |
+| Turn timer | 30 s | Draw the pending +2 penalty, otherwise draw one card or pass (R22). |
 | Reconnect grace period | 60 s | In a running match, an active player forfeits (R23). In the lobby, and for finished players, the member leaves the room. The token can no longer be used (`session_expired`). |
 
 Timer expiry is processed as a server-generated action with the same validation, versioning, and sequential processing as client actions; it is equivalent to a `game:draw` from the current player, except that a player with 20 cards passes even if they hold a legal card (R22). When a disconnected player faces a pending +2 penalty, the server draws it for them in the same way (R10).
