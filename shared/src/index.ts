@@ -8,3 +8,4 @@ export * from "./results.js";
 export * from "./schemas.js";
 export * from "./status.js";
 export * from "./views.js";
+export * from "./xp.js";

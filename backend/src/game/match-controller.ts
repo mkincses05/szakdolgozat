@@ -1,7 +1,7 @@
 // One running match in a room: wraps the engine with the seed, the turn timer (R22), and the
 // distribution of effects, private events, and personal views (R25).
 
-import type { ErrorCode, Presence } from "@wildhand/shared";
+import { getMatchXp, type ErrorCode, type Presence } from "@wildhand/shared";
 import {
   applyDraw,
   applyForfeit,
@@ -21,6 +21,7 @@ import {
   type ViewContext
 } from "../engine/index.js";
 import type { Logger } from "../logger.js";
+import type { MatchRecord, PlayerKind } from "../persistence/match-result-store.js";
 import type { Scheduler, TimerHandle } from "../scheduler.js";
 import type { Transport } from "./transport.js";
 
@@ -49,6 +50,7 @@ export class MatchController {
   private state: MatchState;
   private readonly rng: Rng;
   private readonly displayNames: Map<string, string>;
+  private readonly startedAt: number;
   private turnTimer: TimerHandle | null = null;
   private turnDeadline: number | null = null;
 
@@ -80,6 +82,7 @@ export class MatchController {
     this.state = state;
     this.rng = rng;
     this.displayNames = new Map(options.players.map((player) => [player.userId, player.displayName]));
+    this.startedAt = options.scheduler.now();
   }
 
   get seed(): number {
@@ -131,6 +134,43 @@ export class MatchController {
     if (results) {
       this.options.transport.send(userId, "game:ended", results);
     }
+  }
+
+  /**
+   * The result to store (docs/03 section 2). A match that has not ended is recorded as `aborted`:
+   * players keep only the positions they already have, and nobody earns XP.
+   */
+  toRecord(): MatchRecord {
+    const results = getMatchResults(this.state);
+    const standings = results?.standings ?? [];
+
+    const players = this.state.players.map((player) => {
+      const kind = playerKind();
+      const standing = standings.find((entry) => entry.userId === player.userId);
+      return {
+        seat: player.seat,
+        kind,
+        accountId: null,
+        displayName: this.displayNames.get(player.userId) ?? player.userId,
+        finalStatus: player.matchStatus,
+        finishPosition: player.finishPosition,
+        xpEarned: kind === "registered" && standing ? getMatchXp(standing, standings) : 0
+      };
+    });
+
+    // The first player to finish is the winner, even if the match was aborted later.
+    const winnerId = results?.winnerId ?? this.state.finishingOrder[0];
+    const winner = this.state.players.find((player) => player.userId === winnerId);
+
+    return {
+      seed: this.options.seed,
+      turnTimeoutMs: this.options.turnTimeoutMs,
+      startedAt: new Date(this.startedAt),
+      endedAt: new Date(this.options.scheduler.now()),
+      endReason: results?.endReason ?? "aborted",
+      winnerSeat: winner?.seat ?? null,
+      players
+    };
   }
 
   dispose(): void {
@@ -236,4 +276,9 @@ export class MatchController {
     }
     this.turnDeadline = null;
   }
+}
+
+/** Every human plays as a guest until accounts exist (docs/03 section 2); bots are not seated yet. */
+function playerKind(): PlayerKind {
+  return "guest";
 }

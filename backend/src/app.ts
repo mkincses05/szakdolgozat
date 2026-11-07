@@ -5,6 +5,7 @@ import { Server } from "socket.io";
 import type { ServerConfig } from "./config.js";
 import { RoomService, type RandomSource } from "./game/room-service.js";
 import { consoleLogger, type Logger } from "./logger.js";
+import type { MatchResultStore } from "./persistence/match-result-store.js";
 import { systemScheduler, type Scheduler } from "./scheduler.js";
 import { SocketTransport, registerHandlers, type WildhandServer } from "./socket/register-handlers.js";
 
@@ -12,6 +13,8 @@ export interface ServerDependencies {
   scheduler?: Scheduler;
   logger?: Logger;
   random?: RandomSource;
+  /** Where match results are stored; nothing is stored by default. */
+  results?: MatchResultStore;
 }
 
 export interface WildhandApp {
@@ -39,6 +42,7 @@ export function createWildhandServer(config: ServerConfig, dependencies: ServerD
     scheduler: dependencies.scheduler ?? systemScheduler,
     logger,
     random: dependencies.random,
+    results: dependencies.results,
     turnTimeoutMs: config.turnTimeoutMs,
     reconnectGraceMs: config.reconnectGraceMs
   });
@@ -49,11 +53,12 @@ export function createWildhandServer(config: ServerConfig, dependencies: ServerD
     httpServer,
     io,
     roomService,
+    // Running matches are stored as aborted, and the server waits until every result is written.
     close: () =>
       new Promise((resolve) => {
         io.close(() => {
           roomService.dispose();
-          resolve();
+          void roomService.flushResults().then(resolve);
         });
       })
   };

@@ -2,9 +2,10 @@
 // (backend/.env locally, a service container in CI) and drop the schema of that database.
 
 import dotenv from "dotenv";
-import { Client, DatabaseError } from "pg";
+import { Client, DatabaseError, Pool } from "pg";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { loadMigrations, migrate } from "../../src/db/migrate.js";
+import { createPgMatchResultStore, type MatchRecord } from "../../src/persistence/match-result-store.js";
 
 dotenv.config({ quiet: true });
 const testDatabaseUrl = process.env.TEST_DATABASE_URL;
@@ -17,7 +18,7 @@ describe("loadMigrations", () => {
   });
 });
 
-describe.skipIf(!testDatabaseUrl)("migrate (PostgreSQL)", () => {
+describe.skipIf(!testDatabaseUrl)("PostgreSQL", () => {
   const client = new Client({ connectionString: testDatabaseUrl });
 
   async function sqlState(run: () => Promise<unknown>): Promise<string | undefined> {
@@ -140,5 +141,137 @@ describe.skipIf(!testDatabaseUrl)("migrate (PostgreSQL)", () => {
         client.query("INSERT INTO users (username, email, display_name) VALUES ('Bella', 'ANNA@example.com', 'Bella')")
       )
     ).toBe("23505");
+  });
+
+  describe("match result store", () => {
+    // The store runs with the restricted backend role, as in production.
+    const appPool = new Pool({ connectionString: testDatabaseUrl, options: "-c role=wildhand_app" });
+    const store = createPgMatchResultStore(appPool);
+
+    afterAll(async () => {
+      await appPool.end();
+    });
+
+    async function createUser(username: string): Promise<string> {
+      const { rows } = await client.query<{ id: string }>(
+        "INSERT INTO users (username, email, display_name) VALUES ($1, $2, $1) RETURNING id",
+        [username, `${username}@example.com`]
+      );
+      return rows[0].id;
+    }
+
+    async function counters(userId: string) {
+      const { rows } = await client.query(
+        "SELECT xp::int, matches_played, wins, forfeits FROM users WHERE id = $1",
+        [userId]
+      );
+      return rows[0];
+    }
+
+    async function matchCount(): Promise<number> {
+      const { rows } = await client.query<{ count: number }>("SELECT count(*)::int AS count FROM matches");
+      return rows[0].count;
+    }
+
+    function record(overrides: Partial<MatchRecord>, players: MatchRecord["players"]): MatchRecord {
+      return {
+        seed: 123,
+        turnTimeoutMs: 30_000,
+        startedAt: new Date("2026-11-07T10:00:00Z"),
+        endedAt: new Date("2026-11-07T10:05:00Z"),
+        endReason: "last_player",
+        winnerSeat: 0,
+        players,
+        ...overrides
+      };
+    }
+
+    const player = (
+      seat: number,
+      fields: Partial<MatchRecord["players"][number]>
+    ): MatchRecord["players"][number] => ({
+      seat,
+      kind: "guest",
+      accountId: null,
+      displayName: `Player ${seat + 1}`,
+      finalStatus: "finished",
+      finishPosition: seat + 1,
+      xpEarned: 0,
+      ...fields
+    });
+
+    it("writes the log and updates the counters of registered players", async () => {
+      const winner = await createUser("Winner");
+      const quitter = await createUser("Quitter");
+
+      await store.save(
+        record({ endReason: "forfeits" }, [
+          player(0, { kind: "registered", accountId: winner, xpEarned: 30 }),
+          player(1, { finishPosition: 2 }),
+          player(2, { kind: "registered", accountId: quitter, finalStatus: "forfeited", finishPosition: 3 })
+        ])
+      );
+
+      const { rows: matches } = await client.query(
+        "SELECT seed, player_count, turn_timeout_ms, end_reason, winner_seat FROM matches ORDER BY id DESC LIMIT 1"
+      );
+      expect(matches).toEqual([
+        { seed: "123", player_count: 3, turn_timeout_ms: 30_000, end_reason: "forfeits", winner_seat: 0 }
+      ]);
+
+      const { rows: players } = await client.query(
+        `SELECT seat, player_kind, user_id, final_status, finish_position, xp_earned
+         FROM match_players WHERE match_id = (SELECT max(id) FROM matches) ORDER BY seat`
+      );
+      expect(players).toEqual([
+        { seat: 0, player_kind: "registered", user_id: winner, final_status: "finished", finish_position: 1, xp_earned: 30 },
+        { seat: 1, player_kind: "guest", user_id: null, final_status: "finished", finish_position: 2, xp_earned: 0 },
+        { seat: 2, player_kind: "registered", user_id: quitter, final_status: "forfeited", finish_position: 3, xp_earned: 0 }
+      ]);
+
+      expect(await counters(winner)).toEqual({ xp: 30, matches_played: 1, wins: 1, forfeits: 0 });
+      expect(await counters(quitter)).toEqual({ xp: 0, matches_played: 1, wins: 0, forfeits: 1 });
+    });
+
+    it("logs an aborted match without positions and changes no counter", async () => {
+      const userId = await createUser("Aborted");
+
+      await store.save(
+        record({ endReason: "aborted", winnerSeat: null }, [
+          player(0, { kind: "registered", accountId: userId, finalStatus: "active", finishPosition: null }),
+          player(1, { finalStatus: "forfeited", finishPosition: null })
+        ])
+      );
+
+      const { rows } = await client.query(
+        "SELECT finish_position FROM match_players WHERE match_id = (SELECT max(id) FROM matches) ORDER BY seat"
+      );
+      expect(rows).toEqual([{ finish_position: null }, { finish_position: null }]);
+      expect(await counters(userId)).toEqual({ xp: 0, matches_played: 0, wins: 0, forfeits: 0 });
+    });
+
+    it("writes nothing when any part of the result is invalid", async () => {
+      const userId = await createUser("Rollback");
+      const before = await matchCount();
+
+      // A guest cannot earn XP, so the second insert fails after the match row was written.
+      await expect(
+        store.save(
+          record({}, [
+            player(0, { kind: "registered", accountId: userId, xpEarned: 20 }),
+            player(1, { xpEarned: 10 })
+          ])
+        )
+      ).rejects.toThrow();
+
+      expect(await matchCount()).toBe(before);
+      expect(await counters(userId)).toEqual({ xp: 0, matches_played: 0, wins: 0, forfeits: 0 });
+    });
+
+    it("requires a position for every finished player", async () => {
+      await expect(
+        store.save(record({}, [player(0, { finishPosition: null }), player(1, {})]))
+      ).rejects.toMatchObject({ code: "23514" });
+    });
   });
 });

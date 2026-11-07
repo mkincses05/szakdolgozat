@@ -1,5 +1,7 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import type { MatchView, PlayerMatchView } from "@wildhand/shared";
+import type { Logger } from "../../src/logger.js";
+import type { MatchRecord, MatchResultStore } from "../../src/persistence/match-result-store.js";
 import {
   RECONNECT_GRACE_MS,
   TURN_TIMEOUT_MS,
@@ -319,5 +321,100 @@ describe("after the match", () => {
     expectOkAck(resume(first.reconnectToken));
     expect(transport.last(first.userId, "game:state").phase).toBe("ended");
     expect(transport.last(first.userId, "game:ended").winnerId).toBe(first.userId);
+  });
+});
+
+describe("storing results (docs/03 section 2)", () => {
+  function recordingStore() {
+    const records: MatchRecord[] = [];
+    const store: MatchResultStore = {
+      save: async (record) => {
+        records.push(record);
+      }
+    };
+    return { records, store };
+  }
+
+  it("stores a finished match with every seat, and no XP for guests", async () => {
+    const { records, store } = recordingStore();
+    const { members, scheduler, service } = startedRoom(2, 7, { results: store });
+    const second = members[1];
+
+    scheduler.advance(500);
+    expectOkAck(service.leaveRoom(second.userId, nextActionId()));
+    await service.flushResults();
+
+    expect(records).toEqual([
+      {
+        seed: 7,
+        turnTimeoutMs: TURN_TIMEOUT_MS,
+        startedAt: new Date(0),
+        endedAt: new Date(500),
+        endReason: "forfeits",
+        winnerSeat: 0,
+        players: [
+          {
+            seat: 0,
+            kind: "guest",
+            accountId: null,
+            displayName: "Player 1",
+            finalStatus: "finished",
+            finishPosition: 1,
+            xpEarned: 0
+          },
+          {
+            seat: 1,
+            kind: "guest",
+            accountId: null,
+            displayName: "Player 2",
+            finalStatus: "forfeited",
+            finishPosition: 2,
+            xpEarned: 0
+          }
+        ]
+      }
+    ]);
+  });
+
+  it("stores a running match as aborted when the service is disposed", async () => {
+    const { records, store } = recordingStore();
+    const { service } = startedRoom(3, 1, { results: store });
+
+    service.dispose();
+    await service.flushResults();
+
+    expect(records).toHaveLength(1);
+    expect(records[0]).toMatchObject({ endReason: "aborted", winnerSeat: null });
+    expect(records[0].players.map((player) => [player.finalStatus, player.finishPosition, player.xpEarned])).toEqual([
+      ["active", null, 0],
+      ["active", null, 0],
+      ["active", null, 0]
+    ]);
+  });
+
+  it("does not store an ended match again on dispose", async () => {
+    const { records, store } = recordingStore();
+    const { members, service } = startedRoom(2, 1, { results: store });
+
+    expectOkAck(service.leaveRoom(members[1].userId, nextActionId()));
+    service.dispose();
+    await service.flushResults();
+
+    expect(records.map((record) => record.endReason)).toEqual(["forfeits"]);
+  });
+
+  it("logs a failed write and keeps the room playable", async () => {
+    const logger: Logger = { info: () => {}, warn: () => {}, error: vi.fn() };
+    const failing: MatchResultStore = { save: () => Promise.reject(new Error("database down")) };
+    const { members, service, transport, join, start } = startedRoom(2, 3, { results: failing, logger });
+    const host = members[0];
+
+    expectOkAck(service.leaveRoom(members[1].userId, nextActionId()));
+    await service.flushResults();
+
+    expect(logger.error).toHaveBeenCalledWith("Saving the match with seed 3 failed", expect.any(Error));
+    expect(transport.last(host.userId, "room:state").state).toBe("lobby");
+    join(host.roomCode, "Newcomer");
+    expect(start(host.userId)).toEqual({ ok: true });
   });
 });

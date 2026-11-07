@@ -16,6 +16,7 @@ import {
   type SessionInfo
 } from "@wildhand/shared";
 import type { Logger } from "../logger.js";
+import { noopMatchResultStore, type MatchResultStore } from "../persistence/match-result-store.js";
 import type { Scheduler } from "../scheduler.js";
 import { MatchController } from "./match-controller.js";
 import { SessionRegistry, rememberAction, type IdSource, type Session, type StoredAck } from "./sessions.js";
@@ -45,6 +46,8 @@ export interface RoomServiceOptions {
   random?: RandomSource;
   turnTimeoutMs: number;
   reconnectGraceMs: number;
+  /** Where match results are stored; nothing is stored by default. */
+  results?: MatchResultStore;
 }
 
 /** Called before any message is sent, so the caller can route messages for the new user. */
@@ -64,6 +67,7 @@ export class RoomService {
   private readonly rooms = new Map<string, Room>();
   private readonly sessions: SessionRegistry;
   private readonly random: RandomSource;
+  private readonly pendingSaves = new Set<Promise<void>>();
 
   constructor(private readonly options: RoomServiceOptions) {
     this.random = options.random ?? cryptoRandomSource;
@@ -234,9 +238,17 @@ export class RoomService {
       this.clearGraceTimer(session);
     }
     for (const room of this.rooms.values()) {
+      if (room.match && !room.match.ended) {
+        this.saveResult(room.match);
+      }
       room.match?.dispose();
     }
     this.rooms.clear();
+  }
+
+  /** Waits until every started result write has finished, for example before the server exits. */
+  async flushResults(): Promise<void> {
+    await Promise.all(this.pendingSaves);
   }
 
   /** Leaving or a grace-period expiry: a forfeit for active players in a running match (R23). */
@@ -272,8 +284,21 @@ export class RoomService {
   }
 
   private endMatch(room: Room): void {
+    if (room.match) {
+      this.saveResult(room.match);
+    }
     room.state = "lobby";
     this.broadcastRoom(room);
+  }
+
+  /** Stores the result in the background; a failed write is logged and never affects the game. */
+  private saveResult(match: MatchController): void {
+    const results = this.options.results ?? noopMatchResultStore;
+    const save = results
+      .save(match.toRecord())
+      .catch((error: unknown) => this.options.logger.error(`Saving the match with seed ${match.seed} failed`, error))
+      .finally(() => this.pendingSaves.delete(save));
+    this.pendingSaves.add(save);
   }
 
   private withMatchAction(

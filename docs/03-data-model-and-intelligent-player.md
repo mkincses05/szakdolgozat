@@ -73,20 +73,24 @@ PostgreSQL stores registered user accounts and a statistics log of finished matc
 | `user_credentials` | User ID, argon2id password hash, update time |
 | `auth_sessions` | ID, user ID, SHA-256 hash of the login token, creation, last-use, and expiry time |
 | `matches` | Match ID, seed, player count (2–8), turn time limit, start and end time, end reason (`last_player`, `blocked`, `forfeits`, or `aborted`), winner seat (empty when there is no winner) |
-| `match_players` | Match ID, seat, player kind (`guest`, `registered`, or `bot`), user ID (registered players only), bot level (bots only), display name at match time, final status, finish position, XP earned |
+| `match_players` | Match ID, seat, player kind (`guest`, `registered`, or `bot`), user ID (registered players only), bot level (bots only), display name at match time, final status, finish position (empty only for unranked players of an aborted match), XP earned |
 | `schema_migrations` | Applied migration versions with their application time |
 
 ### Constraints
 
 - The XP and counter columns of `users` cannot be negative, and `wins + forfeits` cannot exceed `matches_played`.
-- The primary key of `match_players` is the match ID and the seat. A user appears at most once per match, and several players can share a finish position after a blocked game (R21).
+- The primary key of `match_players` is the match ID and the seat. A user appears at most once per match, and several players can share a finish position after a blocked game (R18).
 - Only registered players have a user ID and earned XP in `match_players`; only bots have a bot level.
 - Deleting a match deletes its `match_players` rows. Deleting a user sets the user ID to empty in the log and deletes the user's credentials and sessions. Neither deletion changes any other user's counters.
-- `aborted` marks a match stopped without a regular end, for example on server shutdown.
+- `aborted` marks a match stopped without a regular end: on a graceful server shutdown, running matches are stored as aborted. Players who were still playing or had forfeited have no finish position in an aborted match, because forfeits are ranked only when a match ends (R23); a finished player always has one.
 
 ### Writing the result of a match
 
 When a match ends, the server writes the `matches` row, every `match_players` row, and the counter updates of all registered participants in a single transaction. Counters are increased atomically in SQL (for example `xp = xp + $1`), never read, changed, and written back. An `aborted` match is logged but does not change any counter. A failed database write is logged and never blocks or changes the match.
+
+### Experience points
+
+A registered player earns 10 XP for a match plus 10 XP for every player who finished behind them; a forfeit earns nothing. Players who share a position after a blocked game (R18) are not behind each other. For example, in a 4-player match the positions 1 to 4 earn 40, 30, 20, and 10 XP. Guests, bots, and aborted matches earn no XP. The rule is `getMatchXp` in `shared/`.
 
 ### Authentication
 
@@ -100,7 +104,7 @@ Login uses server-side sessions instead of JWT, so logging out really revokes ac
 
 ### Deferred
 
-Email verification, password reset with email delivery, and protection against XP farming are not part of the current scope. The XP awarded per match and the level thresholds are still open.
+Email verification, password reset with email delivery, and protection against XP farming are not part of the current scope. The level thresholds are still open.
 
 ## 3. Intelligent Player Approach
 
