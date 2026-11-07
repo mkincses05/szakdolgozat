@@ -2,7 +2,7 @@ import { useTranslation } from "react-i18next";
 import { ErrorMessage } from "../../components/ErrorMessage";
 import { useServerState } from "../../hooks/useServerState";
 import { MemberList } from "./components/MemberList";
-import { useLeaveRoom } from "./hooks/useLeaveRoom";
+import { useLeaveRoom } from "../../hooks/useLeaveRoom";
 import { useStartMatch } from "./hooks/useStartMatch";
 
 export function LobbyPage() {

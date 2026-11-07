@@ -32,5 +32,44 @@
     "penalty_one": "Strafe ziehen ({{count}} Karte)",
     "penalty_other": "Strafe ziehen ({{count}} Karten)",
     "pass": "Passen"
+  },
+  "options": {
+    "color": "Wähle eine Farbe",
+    "target": "Wähle einen Spieler",
+    "give": "Wähle eine Karte zum Abgeben",
+    "take": "Wähle eine verdeckte Karte zum Nehmen",
+    "faceDownCard": "Karte {{number}}"
+  },
+  "effects": {
+    "title": "Ereignisse",
+    "cardsPlayed": "{{name}} hat {{cards}} gespielt.",
+    "cardsPlayedWithColor": "{{name}} hat {{cards}} gespielt und {{color}} gewählt.",
+    "cardDrawn_one": "{{name}} hat {{count}} Karte gezogen.",
+    "cardDrawn_other": "{{name}} hat {{count}} Karten gezogen.",
+    "cardDrawnBlocked": "{{name}} konnte nicht ziehen, weil die Hand voll ist.",
+    "passed": "{{name}} hat gepasst.",
+    "penaltyDrawn": "{{name}} hat die $t(common:cards.plus2)-Strafe gezogen: {{actual}} von {{requested}} Karten.",
+    "storm": "{{name}} hat $t(common:cards.storm) mit dem Wert {{value}} gespielt. Gezogene Karten: {{draws}}.",
+    "drawAmount": "{{name}} {{actual}}/{{requested}}",
+    "swap": "{{actor}} hat mit $t(common:cards.swap) eine Karte mit {{target}} getauscht.",
+    "swapSkipped": "{{actor}} hat $t(common:cards.swap) als letzte Karte gegen {{target}} gespielt; es wurde nichts getauscht.",
+    "spy": "{{actor}} hat sich mit $t(common:cards.spy) die Hand von {{target}} angesehen.",
+    "reshuffle": "Der Ablagestapel wurde zu einem neuen Nachziehstapel gemischt.",
+    "reshuffleWithDeck": "Der Ablagestapel und ein neues Deck wurden zu einem neuen Nachziehstapel gemischt.",
+    "playerFinished": "{{name}} ist auf Platz {{position}} fertig.",
+    "playerForfeited": "{{name}} hat aufgegeben.",
+    "spyReveal": "$t(common:cards.spy): Hand von {{name}}: {{cards}}.",
+    "swapResult": "$t(common:cards.swap): Du hast {{name}} {{given}} gegeben und {{received}} erhalten."
+  },
+  "spectator": {
+    "finished": "Du bist auf Platz {{position}} fertig.",
+    "forfeited": "Du hast das Spiel aufgegeben.",
+    "watching": "Du schaust dem Spiel zu."
+  },
+  "leave": {
+    "button": "Spiel verlassen",
+    "warning": "Wenn du jetzt gehst, gibst du das Spiel auf.",
+    "confirm": "Verlassen und aufgeben",
+    "cancel": "Bleiben"
   }
 }

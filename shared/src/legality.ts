@@ -88,6 +88,15 @@ export function getComboPartners(view: PlayerMatchView, first: Card): Card[] {
   return view.hand.filter((card) => card.id !== first.id && isNumberCard(card) && card.number === first.number);
 }
 
+/**
+ * Cards the viewer may give away when playing `swapCard` (R12): every other card of their hand.
+ * Empty when the Swap is their last card; the exchange is then skipped and the play carries no
+ * Swap selection.
+ */
+export function getSwapOffers(view: PlayerMatchView, swapCard: Card): Card[] {
+  return view.hand.filter((card) => card.id !== swapCard.id);
+}
+
 export type DrawOption = "penalty" | "draw" | "pass";
 
 /**

@@ -32,5 +32,44 @@
     "penalty_one": "Draw the penalty ({{count}} card)",
     "penalty_other": "Draw the penalty ({{count}} cards)",
     "pass": "Pass"
+  },
+  "options": {
+    "color": "Choose a color",
+    "target": "Choose a player",
+    "give": "Choose a card to give",
+    "take": "Choose a face-down card to take",
+    "faceDownCard": "Card {{number}}"
+  },
+  "effects": {
+    "title": "Events",
+    "cardsPlayed": "{{name}} played {{cards}}.",
+    "cardsPlayedWithColor": "{{name}} played {{cards}} and chose {{color}}.",
+    "cardDrawn_one": "{{name}} drew {{count}} card.",
+    "cardDrawn_other": "{{name}} drew {{count}} cards.",
+    "cardDrawnBlocked": "{{name}} could not draw because their hand is full.",
+    "passed": "{{name}} passed.",
+    "penaltyDrawn": "{{name}} drew the $t(common:cards.plus2) penalty: {{actual}} of {{requested}} cards.",
+    "storm": "{{name}} played $t(common:cards.storm) with value {{value}}. Cards drawn: {{draws}}.",
+    "drawAmount": "{{name}} {{actual}}/{{requested}}",
+    "swap": "{{actor}} exchanged a card with {{target}} using $t(common:cards.swap).",
+    "swapSkipped": "{{actor}} played $t(common:cards.swap) on {{target}} as their last card; no cards were exchanged.",
+    "spy": "{{actor}} looked at the hand of {{target}} using $t(common:cards.spy).",
+    "reshuffle": "The discard pile was shuffled into a new draw pile.",
+    "reshuffleWithDeck": "The discard pile and a new deck were shuffled into a new draw pile.",
+    "playerFinished": "{{name}} finished in place {{position}}.",
+    "playerForfeited": "{{name}} forfeited.",
+    "spyReveal": "$t(common:cards.spy): the hand of {{name}}: {{cards}}.",
+    "swapResult": "$t(common:cards.swap): you gave {{given}} to {{name}} and received {{received}}."
+  },
+  "spectator": {
+    "finished": "You finished in place {{position}}.",
+    "forfeited": "You forfeited the match.",
+    "watching": "You are watching the match."
+  },
+  "leave": {
+    "button": "Leave the match",
+    "warning": "If you leave now, you forfeit the match.",
+    "confirm": "Leave and forfeit",
+    "cancel": "Stay"
   }
 }

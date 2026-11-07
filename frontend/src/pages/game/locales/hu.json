@@ -32,5 +32,44 @@
     "penalty_one": "Büntetés felhúzása ({{count}} lap)",
     "penalty_other": "Büntetés felhúzása ({{count}} lap)",
     "pass": "Passz"
+  },
+  "options": {
+    "color": "Válassz színt",
+    "target": "Válassz játékost",
+    "give": "Válaszd ki, melyik lapodat adod oda",
+    "take": "Válassz egy lefordított lapot, amit elveszel",
+    "faceDownCard": "{{number}}. lap"
+  },
+  "effects": {
+    "title": "Események",
+    "cardsPlayed": "{{name}} kijátszotta: {{cards}}.",
+    "cardsPlayedWithColor": "{{name}} kijátszotta: {{cards}}, és ezt a színt választotta: {{color}}.",
+    "cardDrawn_one": "{{name}} húzott {{count}} lapot.",
+    "cardDrawn_other": "{{name}} húzott {{count}} lapot.",
+    "cardDrawnBlocked": "{{name}} nem tudott húzni, mert tele van a keze.",
+    "passed": "{{name}} passzolt.",
+    "penaltyDrawn": "{{name}} felhúzta a $t(common:cards.plus2) büntetést: {{requested}} lapból {{actual}} lapot.",
+    "storm": "{{name}} kijátszott egy $t(common:cards.storm) lapot {{value}} értékkel. Húzott lapok: {{draws}}.",
+    "drawAmount": "{{name}} {{actual}}/{{requested}}",
+    "swap": "{{actor}} lapot cserélt {{target}} játékossal ($t(common:cards.swap)).",
+    "swapSkipped": "{{actor}} utolsó lapként játszott ki $t(common:cards.swap) lapot {{target}} ellen, így nem történt csere.",
+    "spy": "{{actor}} megnézte {{target}} játékos kezét ($t(common:cards.spy)).",
+    "reshuffle": "A dobópakli lapjait összekeverve új húzópakli lett.",
+    "reshuffleWithDeck": "A dobópakli lapjait és egy új paklit összekeverve új húzópakli lett.",
+    "playerFinished": "{{name}} végzett, {{position}}. helyen.",
+    "playerForfeited": "{{name}} feladta.",
+    "spyReveal": "$t(common:cards.spy): {{name}} játékos keze: {{cards}}.",
+    "swapResult": "$t(common:cards.swap): odaadtad ezt {{name}} játékosnak: {{given}}, és ezt kaptad: {{received}}."
+  },
+  "spectator": {
+    "finished": "{{position}}. helyen végeztél.",
+    "forfeited": "Feladtad a meccset.",
+    "watching": "Nézőként követed a meccset."
+  },
+  "leave": {
+    "button": "Kilépés a meccsből",
+    "warning": "Ha most kilépsz, feladod a meccset.",
+    "confirm": "Kilépés és feladás",
+    "cancel": "Maradok"
   }
 }

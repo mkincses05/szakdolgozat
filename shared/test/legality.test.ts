@@ -3,6 +3,7 @@ import {
   getComboPartners,
   getDrawOption,
   getLegalCards,
+  getSwapOffers,
   getValidTargets,
   isPlayableOn,
   type Card,
@@ -123,6 +124,20 @@ describe("getComboPartners", () => {
   it("returns nothing for special cards (R9)", () => {
     const plus2 = special("plus2", "red");
     expect(getComboPartners(view([plus2, special("plus2", "blue")]), plus2)).toEqual([]);
+  });
+});
+
+describe("getSwapOffers", () => {
+  it("offers every other card of the hand (R12)", () => {
+    const swap = special("swap", "red");
+    const red3 = num("red", 3);
+    const storm = wild("storm");
+    expect(getSwapOffers(view([red3, swap, storm]), swap)).toEqual([red3, storm]);
+  });
+
+  it("offers nothing when the Swap is the last card (R12)", () => {
+    const swap = special("swap", "red");
+    expect(getSwapOffers(view([swap]), swap)).toEqual([]);
   });
 });
 

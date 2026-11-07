@@ -1,8 +1,8 @@
 // Sends `room:leave` and forgets the session once the server has removed the player.
 
 import { useState } from "react";
-import { useServerState } from "../../../hooks/useServerState";
-import { sendAction, type ActionErrorCode } from "../../../services/actions";
+import { useServerState } from "./useServerState";
+import { sendAction, type ActionErrorCode } from "../services/actions";
 
 export function useLeaveRoom() {
   const { endSession } = useServerState();
