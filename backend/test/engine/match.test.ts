@@ -118,8 +118,19 @@ describe("turn order and presence (R23)", () => {
     state = expectOk(applyDraw(state, "p0", rng)).state;
     expect(state.currentPlayerId).toBeNull();
 
+    const version = state.stateVersion;
     state = expectOk(setPresence(state, "p2", "connected")).state;
     expect(state.currentPlayerId).toBe("p2");
+    // Handing over the turn is a new version.
+    expect(state.stateVersion).toBe(version + 1);
+  });
+
+  it("a presence change that leaves the turn as it was keeps the state version", () => {
+    const state = buildState({ hands: [unplayable(3), unplayable(3), unplayable(3)], top: num("red", 2) });
+    const disconnected = expectOk(setPresence(state, "p1", "disconnected")).state;
+    expect(disconnected.players[1].presence).toBe("disconnected");
+    expect(disconnected.stateVersion).toBe(state.stateVersion);
+    expect(expectOk(setPresence(disconnected, "p1", "connected")).state.stateVersion).toBe(state.stateVersion);
   });
 });
 
@@ -153,13 +164,13 @@ describe("validation and versioning", () => {
 });
 
 describe("views (R25)", () => {
-  const context = { displayName: (userId: string) => `Name ${userId}`, turnDeadline: 1234 };
+  const context = { displayName: (userId: string) => `Name ${userId}`, turnDeadline: 1234, serverTime: 1000 };
 
   it("a player sees only their own hand; others see hand sizes", () => {
     const state = buildState({ hands: [unplayable(3), unplayable(4)], top: num("red", 2) });
     const view = toMatchView(state, "p0", context);
 
-    expect(view).toMatchObject({ viewer: "player", userId: "p0", hand: hand(state, "p0"), turnDeadline: 1234 });
+    expect(view).toMatchObject({ viewer: "player", userId: "p0", hand: hand(state, "p0"), turnDeadline: 1234, serverTime: 1000 });
     expect(view.players.map((entry) => entry.handSize)).toEqual([3, 4]);
     for (const card of hand(state, "p1")) {
       expect(JSON.stringify(view)).not.toContain(card.id);

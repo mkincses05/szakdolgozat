@@ -9,6 +9,7 @@ import {
   type ServerToClientEvents
 } from "@wildhand/shared";
 import type { RoomService } from "../game/room-service.js";
+import { rememberAck } from "../game/sessions.js";
 import type { Transport } from "../game/transport.js";
 import type { Logger } from "../logger.js";
 
@@ -62,8 +63,12 @@ export function registerHandlers(
   io.on("connection", (socket) => {
     socket.data.userId = null;
 
-    /** Duplicate detection for actions sent before the socket has a session. */
-    const preSessionAcks = new Map<string, Ack<unknown>>();
+    /**
+     * Duplicate detection for actions answered without a session: `room:create` and `room:join`
+     * before it exists, and a successful `room:leave`, which removes the session together with
+     * the acknowledgements it remembered.
+     */
+    const connectionAcks = new Map<string, Ack | Ack<unknown>>();
 
     const bind = (userId: string) => {
       const previous = transport.bind(userId, socket);
@@ -103,12 +108,12 @@ export function registerHandlers(
     }
 
     function once<T extends Ack<unknown>>(actionId: string, run: () => T): T {
-      const previous = preSessionAcks.get(actionId);
+      const previous = connectionAcks.get(actionId);
       if (previous) {
         return previous as T;
       }
       const ack = run();
-      preSessionAcks.set(actionId, ack);
+      rememberAck(connectionAcks, actionId, ack);
       return ack;
     }
 
@@ -122,20 +127,28 @@ export function registerHandlers(
       )
     );
 
-    on("room:leave", (payload) =>
-      withSession((userId) => {
+    on("room:leave", (payload) => {
+      const left = connectionAcks.get(payload.actionId);
+      if (left) {
+        return left as AckOf<"room:leave">;
+      }
+
+      return withSession((userId) => {
         const ack = roomService.leaveRoom(userId, payload.actionId);
-        if (ack.ok && transport.unbind(userId, socket)) {
-          socket.data.userId = null;
+        if (ack.ok) {
+          rememberAck(connectionAcks, payload.actionId, ack);
+          if (transport.unbind(userId, socket)) {
+            socket.data.userId = null;
+          }
         }
         return ack;
-      })
-    );
+      });
+    });
 
     on("room:start", (payload) => withSession((userId) => roomService.startMatch(userId, payload.actionId)));
     on("game:play", (payload) => withSession((userId) => roomService.play(userId, payload)));
     on("game:draw", (payload) => withSession((userId) => roomService.draw(userId, payload)));
-    on("session:resume", (payload) => roomService.resume(payload.reconnectToken, bind));
+    on("session:resume", (payload) => roomService.resume(socket.data.userId, payload.reconnectToken, bind));
 
     socket.on("disconnect", () => {
       const userId = socket.data.userId;

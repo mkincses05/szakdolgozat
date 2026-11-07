@@ -4,8 +4,8 @@
 import type { Ack, SessionInfo } from "@wildhand/shared";
 import type { TimerHandle } from "../scheduler.js";
 
-/** Remembered acknowledgements per session, so duplicate actions get the original answer. */
-const PROCESSED_ACTIONS_LIMIT = 100;
+/** Remembered acknowledgements per session or connection, so duplicate actions get the original answer. */
+export const PROCESSED_ACTIONS_LIMIT = 100;
 const EXPIRED_TOKENS_LIMIT = 1000;
 
 export type StoredAck = Ack | Ack<SessionInfo>;
@@ -74,9 +74,14 @@ export class SessionRegistry {
   }
 }
 
-export function rememberAction(session: Session, actionId: string, ack: StoredAck): void {
-  session.processedActions.set(actionId, ack);
-  if (session.processedActions.size > PROCESSED_ACTIONS_LIMIT) {
-    session.processedActions.delete(session.processedActions.keys().next().value!);
+/** Remembers an acknowledgement and forgets the oldest one beyond the limit. */
+export function rememberAck<T>(acks: Map<string, T>, actionId: string, ack: T): void {
+  acks.set(actionId, ack);
+  if (acks.size > PROCESSED_ACTIONS_LIMIT) {
+    acks.delete(acks.keys().next().value!);
   }
+}
+
+export function rememberAction(session: Session, actionId: string, ack: StoredAck): void {
+  rememberAck(session.processedActions, actionId, ack);
 }

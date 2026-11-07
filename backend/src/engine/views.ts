@@ -3,10 +3,14 @@
 import type { MatchView, PublicMatchView } from "@wildhand/shared";
 import { findPlayer, topCard, type MatchState } from "./state.js";
 
-/** Data the engine does not own: display names come from the room, the deadline from the turn timer. */
+/**
+ * Data the engine does not own: display names come from the room, the deadline and the server
+ * time from the turn timer's clock.
+ */
 export interface ViewContext {
   displayName(userId: string): string;
   turnDeadline: number | null;
+  serverTime: number;
 }
 
 export function toPublicMatchView(state: MatchState, context: ViewContext): PublicMatchView {
@@ -29,6 +33,7 @@ export function toPublicMatchView(state: MatchState, context: ViewContext): Publ
     pendingPenalty: state.pendingPenalty,
     drawPileSize: state.drawPile.length,
     turnDeadline: context.turnDeadline,
+    serverTime: context.serverTime,
     finishingOrder: [...state.finishingOrder],
     stateVersion: state.stateVersion
   };
@@ -38,8 +43,13 @@ export function toPublicMatchView(state: MatchState, context: ViewContext): Publ
  * Personal view for an active or finished match player; a spectator view for everyone else,
  * including forfeited players and room members outside the match.
  */
-export function toMatchView(state: MatchState, viewerId: string | null, context: ViewContext): MatchView {
-  const publicView = toPublicMatchView(state, context);
+export function toMatchView(
+  state: MatchState,
+  viewerId: string | null,
+  context: ViewContext,
+  /** Pass the result of `toPublicMatchView` when building views for several viewers at once. */
+  publicView: PublicMatchView = toPublicMatchView(state, context)
+): MatchView {
   const viewer = viewerId === null ? undefined : findPlayer(state, viewerId);
 
   if (!viewer || viewer.matchStatus === "forfeited") {

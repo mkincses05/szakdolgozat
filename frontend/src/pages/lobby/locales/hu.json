@@ -1,0 +1,12 @@
+{
+  "title": "Váróterem",
+  "roomCode": "Szobakód: {{code}}",
+  "shareCode": "Oszd meg ezt a kódot a többi játékossal.",
+  "players": "Játékosok ({{count}}/{{max}})",
+  "minPlayers": "A meccs indításához legalább {{min}} játékos kell.",
+  "you": "te",
+  "host": "házigazda",
+  "start": "Meccs indítása",
+  "waitingForHost": "Várakozás arra, hogy a házigazda elindítsa a meccset.",
+  "leave": "Kilépés a szobából"
+}

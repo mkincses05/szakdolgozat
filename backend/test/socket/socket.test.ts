@@ -109,6 +109,18 @@ describe("Socket.IO protocol", () => {
     expect(await player.emit("room:start", action())).toEqual({ ok: false, code: "not_in_room" });
   });
 
+  it("answers a repeated room:leave with the original acknowledgement", async () => {
+    const url = await startServer();
+    const { host } = await createRoom(url);
+    const leave = action();
+
+    expect(await host.emit("room:leave", leave)).toEqual({ ok: true });
+    // The session is gone, but the connection still remembers the answer to this action.
+    expect(await host.emit("room:leave", leave)).toEqual({ ok: true });
+    // A new leave is a new action, and there is no session left to leave.
+    expect(await host.emit("room:leave", action())).toEqual({ ok: false, code: "not_in_room" });
+  });
+
   it("accepts up to 8 players in a room and rejects the 9th (R1)", async () => {
     const url = await startServer();
     const { session } = await createRoom(url);
@@ -188,6 +200,21 @@ describe("Socket.IO protocol", () => {
     await disconnected;
 
     expect(await replacement.waitFor("room:state")).toMatchObject({ members: [{ presence: "connected" }] });
+  });
+
+  it("does not let a connection with a session take over another session", async () => {
+    const url = await startServer();
+    const { host, session } = await createRoom(url);
+    const guest = await client(url);
+    const joined = await guest.emit("room:join", { ...action(), roomCode: session.roomCode, displayName: "Guest" });
+
+    expect(await host.emit("session:resume", { reconnectToken: joined.data!.reconnectToken })).toEqual({
+      ok: false,
+      code: "already_in_room"
+    });
+    // Resuming the connection's own session again is a harmless retry.
+    expect((await host.emit("session:resume", { reconnectToken: session.reconnectToken })).ok).toBe(true);
+    expect(guest.socket.connected).toBe(true);
   });
 
   it("rejects a resume after the grace period has expired", async () => {

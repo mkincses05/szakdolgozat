@@ -9,14 +9,14 @@ export interface ServerConfig {
   reconnectGraceMs: number;
 }
 
-function positiveInt(value: string | undefined, fallback: number, name: string): number {
+function integer(value: string | undefined, fallback: number, name: string, min: number): number {
   if (value === undefined || value === "") {
     return fallback;
   }
 
   const parsed = Number(value);
-  if (!Number.isInteger(parsed) || parsed < 0) {
-    throw new Error(`${name} must be a non-negative integer, got "${value}"`);
+  if (!Number.isInteger(parsed) || parsed < min) {
+    throw new Error(`${name} must be an integer of at least ${min}, got "${value}"`);
   }
 
   return parsed;
@@ -24,9 +24,11 @@ function positiveInt(value: string | undefined, fallback: number, name: string):
 
 export function loadConfig(env: NodeJS.ProcessEnv = process.env): ServerConfig {
   return {
-    port: positiveInt(env.PORT, 3000, "PORT"),
+    // 0 lets the operating system pick a free port.
+    port: integer(env.PORT, 3000, "PORT", 0),
     corsOrigin: env.CORS_ORIGIN || "*",
-    turnTimeoutMs: positiveInt(env.TURN_TIMEOUT_MS, DEFAULT_TURN_TIMEOUT_MS, "TURN_TIMEOUT_MS"),
-    reconnectGraceMs: positiveInt(env.RECONNECT_GRACE_MS, DEFAULT_RECONNECT_GRACE_MS, "RECONNECT_GRACE_MS")
+    // A zero timer would end every turn, or forfeit every disconnect, immediately.
+    turnTimeoutMs: integer(env.TURN_TIMEOUT_MS, DEFAULT_TURN_TIMEOUT_MS, "TURN_TIMEOUT_MS", 1),
+    reconnectGraceMs: integer(env.RECONNECT_GRACE_MS, DEFAULT_RECONNECT_GRACE_MS, "RECONNECT_GRACE_MS", 1)
   };
 }

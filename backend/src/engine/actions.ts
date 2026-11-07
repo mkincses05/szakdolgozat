@@ -3,10 +3,10 @@
 // Plays follow the turn resolution contract (docs/01, section 6).
 
 import {
-  HAND_LIMIT,
   PLUS2_PENALTY,
   STORM_MAX,
   STORM_MIN,
+  drawOptionFor,
   isNumberCard,
   isSpecialCard,
   type Card,
@@ -148,6 +148,12 @@ export function setPresence(state: MatchState, userId: string, presence: Presenc
     next.currentPlayerId = userId;
   }
 
+  // A presence change alone leaves the game as it was, so an action sent for the current version
+  // stays valid; it is still validated against the new presence. Handing the turn to a
+  // reconnecting player is a new version.
+  if (next.currentPlayerId === state.currentPlayerId) {
+    return { ok: true, state: next, effects: [], privateEvents: [] };
+  }
   return commit(next, [], []);
 }
 
@@ -157,13 +163,14 @@ function resolveTurnWithoutPlay(state: MatchState, userId: string, rng: Rng, tim
     return { ok: false, code: error };
   }
 
+  // R17: at 20 cards with a legal card the player must play; a timeout passes anyway (R22).
   const original = findPlayer(state, userId)!;
-  if (
-    !timeout &&
-    state.pendingPenalty === 0 &&
-    original.hand.length >= HAND_LIMIT &&
-    hasLegalCard(state, original)
-  ) {
+  const option = drawOptionFor({
+    pendingPenalty: state.pendingPenalty,
+    handSize: original.hand.length,
+    hasLegalCard: hasLegalCard(state, original)
+  });
+  if (!timeout && option === null) {
     return { ok: false, code: "hand_limit_reached" };
   }
 
@@ -171,11 +178,12 @@ function resolveTurnWithoutPlay(state: MatchState, userId: string, rng: Rng, tim
   const player = findPlayer(next, userId)!;
   const effects: GameEffect[] = [];
 
-  if (next.pendingPenalty > 0) {
+  // `null` reaches here only on a timeout at 20 cards with a legal card: the player passes (R22).
+  if (option === "penalty") {
     const draw = drawCards(next, player, next.pendingPenalty, rng, effects);
     next.pendingPenalty = 0;
     effects.push({ type: "penaltyDrawn", draw });
-  } else if (player.hand.length < HAND_LIMIT) {
+  } else if (option === "draw") {
     effects.push({ type: "cardDrawn", draw: drawCards(next, player, 1, rng, effects) });
   } else {
     effects.push({ type: "passed", userId });

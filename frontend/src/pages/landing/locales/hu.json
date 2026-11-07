@@ -1,0 +1,12 @@
+{
+  "tagline": "Többjátékos kártyajáték",
+  "language": "Nyelv",
+  "displayName": "A neved",
+  "createRoom": "Szoba létrehozása",
+  "roomCode": "Szobakód",
+  "joinRoom": "Csatlakozás",
+  "validation": {
+    "displayName": "A neved {{min}}–{{max}} karakter hosszú lehet.",
+    "roomCode": "A szobakód {{length}} betűből vagy számjegyből áll."
+  }
+}

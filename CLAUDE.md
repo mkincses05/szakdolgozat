@@ -2,18 +2,27 @@
 
 ## Git conventions
 
-- Branch names must use `feature/` or `hotfix/`.
+- Branch names must use `feature/`, `hotfix/`, or `chore/`, matching the commit type: `feature/` for `feat`, `hotfix/` for `fix`, and `chore/` for `chore`.
 - After the prefix, use a short branch name with words separated by hyphens.
 - Branch names may contain only lowercase, unaccented ASCII letters, numbers, and hyphens.
-- Commit messages must use `feat: short description` or `fix: short description`.
+- Commit messages must use `feat: short description`, `fix: short description`, or `chore: short description`.
+- Use `feat` for new functionality, `fix` for bug fixes, and `chore` for maintenance that does not change application behavior, such as CI, tooling, dependency, or configuration changes.
 - Commit descriptions use spaces between words and should be short and clear.
 
 Examples:
 
 - `feature/add-game-room`
 - `hotfix/fix-card-limit`
+- `chore/add-ci-workflow`
 - `feat: add game room`
 - `fix: enforce card limit`
+- `chore: add ci workflow`
+
+## Git operations
+
+- Ask the user for confirmation before every Git operation that changes the repository or the remote, for example `git add`, `git commit`, `git push`, `git merge`, `git rebase`, `git reset`, and creating, switching, or deleting branches.
+- Read-only commands, such as `git status`, `git diff`, and `git log`, need no confirmation.
+- A confirmation applies only to the operation it was given for; ask again for the next one.
 
 ## Internationalization
 
@@ -26,6 +35,59 @@ The user interface supports:
 Use an i18n solution for all user-facing text. It is forbidden to hardcode plain translatable text directly in UI components, pages, validation messages, notifications, or error messages. Add new text to the appropriate translation resources and reference it through i18n keys.
 
 Translations cover the landing page, lobby, gameplay, spectator view, results, validation messages, status indicators, and connection messages.
+
+## Frontend conventions
+
+### No game logic in the frontend
+
+- The server decides everything about the game. The frontend displays the latest state received from the server and sends the player's intent as a Socket.IO action; the server validates every action.
+- Game logic is forbidden in the frontend: implementing or duplicating game rules, resolving card effects, computing draws, penalties, rankings, or turn order, and deciding whether an action is allowed or what it results in.
+- Rule-based hints in the interface, such as which cards are playable, which players can be targeted, which cards can join a combo, which cards can be given with Swap, or what the draw button does, come only from the helpers in `@wildhand/shared` (`getLegalCards`, `getValidTargets`, `getComboPartners`, `getSwapOffers`, `getDrawOption`). If a hint is missing, add a helper to `shared/`; never reimplement a rule in the frontend.
+- Presentation calculations that do not affect the game are allowed, for example the countdown from `turnDeadline`, arranging players around the table, sorting, and formatting.
+- Local UI state is allowed, for example selected cards, open dialogs, hover and focus, and queued animations.
+- Local game state is forbidden. Do not change the hand, the top card, the current player, or any other game value before the server confirms it (no optimistic updates), and do not keep a separate copy of the match state; always render the latest `game:state`.
+
+### Technologies
+
+- React with TypeScript, built with Vite.
+- Tailwind CSS (version 4, through its Vite plugin) for all styling; `clsx` for conditional class names.
+- Define the card colors and other design tokens once in Tailwind's `@theme` and use them everywhere instead of ad hoc color values.
+- Custom CSS only for complex animations and visual effects that Tailwind utilities cannot express cleanly, such as dealing, playing, or shuffling cards. Put it in `frontend/src/styles/animations.css` and register the animations in `@theme`, so they can be used as utility classes.
+- `socket.io-client` for the connection, with one shared connection for the whole application.
+- i18next and react-i18next for translations.
+- Vitest, jsdom, and React Testing Library for tests.
+
+### Folder structure
+
+The frontend uses a feature-based structure in which every page is a feature:
+
+- `frontend/src/main.tsx`: the entry point only.
+- `frontend/src/app/`: application-level code: the root `App` component, providers, and the selection of the visible page from the room and match state.
+- `frontend/src/pages/<page>/`: one folder per page, for example `landing`, `lobby`, `game`, and `results`. It contains the page component (`<Page>Page.tsx`), a `components/` folder for components used only on that page, a `hooks/` folder for hooks used only on that page, and a `locales/` folder with `en.json`, `hu.json`, and `de.json`.
+- `frontend/src/components/` and `frontend/src/hooks/`: components and hooks used on more than one page.
+- `frontend/src/services/`: non-React infrastructure that exists once for the whole application: the Socket.IO client, the typed wrapper for sending actions and receiving acknowledgements, and the storage of the session in the browser. Services contain no React code and no game logic, and there are no page-specific services.
+- `frontend/src/utils/`: small non-React helpers used on more than one page, such as formatting. The no-game-logic rule applies here as well.
+- `frontend/src/assets/`: images, icons, and fonts.
+- `frontend/src/i18n/`: the i18next setup and the `common` namespace.
+- `frontend/src/styles/`: custom CSS, such as `animations.css`.
+- `frontend/src/test/`: the test setup.
+- There is no `types/` folder: shared types come from `@wildhand/shared`, and types used in a single file stay in that file.
+
+Rules:
+
+- New code starts in the folder of the page that uses it. Move a component, hook, or helper to the shared `components/`, `hooks/`, or `utils/` folder only when a second page starts using it.
+- Break pages down into small components and custom hooks:
+  - Components render the interface. Simple state that belongs to a single component, such as whether a menu is open, may stay in that component.
+  - Hooks hold all other state, timers, and other side effects, and connect components to the services, for example by subscribing to Socket.IO events.
+- Use one component per file, named in PascalCase (`PlayerHand.tsx`). Hooks are named `useSomething` in camelCase (`useTurnTimer.ts`).
+
+### Translation namespaces
+
+- The `common` namespace in `frontend/src/i18n/locales/` holds texts used on more than one page: shared buttons and labels, connection messages, and every server error code.
+- Every code in `ERROR_CODES` from `@wildhand/shared` has a translation under `errors.<code>` in the `common` namespace, for example `errors.room_full`.
+- Every page has its own namespace, named after its folder (`landing`, `lobby`, ...), with the translations in the page's `locales/` folder. They are collected automatically.
+- A component reads its page namespace with `useTranslation("<page>")` and common texts with the `common:` prefix, for example `t("common:errors.room_full")`.
+- Every language defines the same keys in every namespace. Keep this rule and the error-code rule covered by tests.
 
 ## Project facts
 
@@ -59,7 +121,7 @@ The numbered rules in `docs/01-game-analysis-and-design.md` are the technical so
 - The base deck contains 104 cards: 80 number cards, 8 +2 (2 per color), 4 Swap (1 per color), 4 Storm, 4 Color Change, and 4 Spy.
 - +2 and Swap are colored special cards; Storm, Color Change, and Spy are colorless wild cards.
 - The starting card is a random number card; a special card drawn as the starting card is returned to the draw pile and another card is drawn.
-- A random player takes the first turn; play continues clockwise in seat order.
+- A random connected player takes the first turn; play continues clockwise in seat order.
 - A player finishes when their hand is empty after the complete resolution of their turn. The first player to finish is the winner.
 - The match continues after the first winner until only one active player remains.
 - A finished player may remain as a spectator or leave.

@@ -132,7 +132,7 @@ export function setup(seed = 1) {
     create: (name = "Host"): SessionInfo => expectOkAck(service.createRoom(null, name, noBind)),
     join: (roomCode: string, name: string): SessionInfo => expectOkAck(service.joinRoom(null, roomCode, name, noBind)),
     start: (userId: string) => service.startMatch(userId, nextActionId()),
-    resume: (token: string) => service.resume(token, noBind),
+    resume: (token: string) => service.resume(null, token, noBind),
     /** Draws for the current player of the latest view sent to `observer`. */
     drawFor: (userId: string) => {
       const view = transport.last(userId, "game:state");

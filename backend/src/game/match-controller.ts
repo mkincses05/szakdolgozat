@@ -13,11 +13,14 @@ import {
   getMatchResults,
   setPresence,
   toMatchView,
+  toPublicMatchView,
   type EngineResult,
   type MatchState,
   type PlayAction,
-  type Rng
+  type Rng,
+  type ViewContext
 } from "../engine/index.js";
+import type { Logger } from "../logger.js";
 import type { Scheduler, TimerHandle } from "../scheduler.js";
 import type { Transport } from "./transport.js";
 
@@ -33,6 +36,7 @@ export interface MatchControllerOptions {
   players: { userId: string; displayName: string; connected: boolean }[];
   transport: Transport;
   scheduler: Scheduler;
+  logger: Logger;
   turnTimeoutMs: number;
   /** Current room members; they receive every match message. */
   recipients: () => readonly string[];
@@ -51,22 +55,18 @@ export class MatchController {
   static start(options: MatchControllerOptions): StartMatchResult {
     const rng = createSeededRng(options.seed);
     const created = createMatch(
-      { matchId: options.matchId, userIds: options.players.map((player) => player.userId) },
+      {
+        matchId: options.matchId,
+        userIds: options.players.map((player) => player.userId),
+        disconnectedUserIds: options.players.filter((player) => !player.connected).map((player) => player.userId)
+      },
       rng
     );
     if (!created.ok) {
       return created;
     }
 
-    let state = created.state;
-    for (const player of options.players) {
-      if (!player.connected) {
-        const result = setPresence(state, player.userId, "disconnected");
-        if (result.ok) state = result.state;
-      }
-    }
-
-    const match = new MatchController(options, state, rng);
+    const match = new MatchController(options, created.state, rng);
     match.restartTurnTimer();
     match.broadcastState();
     return { ok: true, match };
@@ -184,16 +184,24 @@ export class MatchController {
   }
 
   private broadcastState(): void {
+    // The public part is the same for everyone; only the viewer's own hand differs (R25).
+    const context = this.viewContext();
+    const publicView = toPublicMatchView(this.state, context);
     for (const userId of this.options.recipients()) {
-      this.options.transport.send(userId, "game:state", this.viewFor(userId));
+      this.options.transport.send(userId, "game:state", toMatchView(this.state, userId, context, publicView));
     }
   }
 
   private viewFor(userId: string) {
-    return toMatchView(this.state, userId, {
+    return toMatchView(this.state, userId, this.viewContext());
+  }
+
+  private viewContext(): ViewContext {
+    return {
       displayName: (playerId) => this.displayNames.get(playerId) ?? playerId,
-      turnDeadline: this.turnDeadline
-    });
+      turnDeadline: this.turnDeadline,
+      serverTime: this.options.scheduler.now()
+    };
   }
 
   /** R22: every turn has a time limit; no timer runs while no one has the turn. */
@@ -209,7 +217,15 @@ export class MatchController {
     this.turnDeadline = scheduler.now() + turnTimeoutMs;
     this.turnTimer = scheduler.setTimeout(() => {
       this.turnTimer = null;
-      this.apply("timeout", applyTimeout(this.state, currentPlayerId, this.rng));
+      const code = this.apply("timeout", applyTimeout(this.state, currentPlayerId, this.rng));
+      if (code !== null) {
+        // A rejected timeout must not leave the turn without a deadline.
+        this.options.logger.error(`Turn timeout of ${currentPlayerId} in match ${this.options.matchId} was rejected: ${code}`);
+        if (!this.ended) {
+          this.restartTurnTimer();
+          this.broadcastState();
+        }
+      }
     }, turnTimeoutMs);
   }
 

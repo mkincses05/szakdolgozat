@@ -55,7 +55,7 @@ Each client action carries an `actionId` (a client-generated UUID); gameplay act
 | `room:start` | — | Host only; requires 2–8 members. |
 | `game:play` | `cardIds[]`, `chosenColor?`, `targetPlayerId?`, `swapCardId?`, `targetCardPosition?` | One special card or a number combo (R8, R9). For Swap, `swapCardId` is the acting player's card and `targetCardPosition` is the blindly picked face-down position (R12). |
 | `game:draw` | — | Voluntary or forced draw (R15), pass (R17), or drawing a +2 penalty (R10). |
-| `session:resume` | `reconnectToken` | Reconnects a player within the grace period. |
+| `session:resume` | `reconnectToken` | Reconnects a player within the grace period. Resuming the same session again is allowed; a connection that already has another session is rejected with `already_in_room`. |
 
 ### Server → client
 
@@ -72,14 +72,14 @@ After every accepted action the server sends the `game:effect` events first, the
 
 ### Duplicate and out-of-order actions
 
-- An action whose `actionId` has already been processed returns the original acknowledgement without changing the state. Acknowledgements are remembered per session for the most recent 100 actions; `room:create` and `room:join`, which are sent before a session exists, are remembered per connection.
+- An action whose `actionId` has already been processed returns the original acknowledgement without changing the state, whether the action was accepted or rejected. A client therefore sends every new attempt, for example after `stale_state`, with a new `actionId`. Acknowledgements are remembered per session for the most recent 100 actions; actions answered without a session are remembered per connection, also for the most recent 100: `room:create` and `room:join`, sent before a session exists, and a successful `room:leave`, which removes the session.
 - An action whose `stateVersion` is not the current version is rejected with `stale_state`.
-- Each accepted action increments `stateVersion` exactly once.
+- Each accepted action increments `stateVersion` exactly once. A change of connection presence that does not hand over the turn keeps the version, so an action sent just before it stays valid; it is still validated against the new presence.
 - Actions for one match are processed sequentially, so concurrent actions cannot interleave.
 
 ## 3. Visibility Rules (R25)
 
-- Each player receives their own hand, the other players' hand sizes, the top card, the active color, `pendingPenalty`, the current player, the turn deadline, the draw-pile size, and the finishing order.
+- Each player receives their own hand, the other players' hand sizes, the top card, the active color, `pendingPenalty`, the current player, the turn deadline with the server time at sending (so clients can correct a skewed clock), the draw-pile size, and the finishing order.
 - Spectators receive the same public state without any hand.
 - Spy snapshots are sent only to the Spy player.
 - During a Swap, the acting player sees the target's hand only as face-down positions. The server maps `targetCardPosition` to a card through a fresh random permutation at resolution time, so the hand order never leaks information. Only the two participants learn which cards were exchanged.
@@ -91,7 +91,7 @@ All values are configurable; the defaults are:
 
 | Timer | Default | On expiry |
 | --- | ---: | --- |
-| Turn timer | 60 s | Draw the pending +2 penalty, otherwise draw one card or pass (R22). |
+| Turn timer | 30 s | Draw the pending +2 penalty, otherwise draw one card or pass (R22). |
 | Reconnect grace period | 60 s | In a running match, an active player forfeits (R23). In the lobby, and for finished players, the member leaves the room. The token can no longer be used (`session_expired`). |
 
 Timer expiry is processed as a server-generated action with the same validation, versioning, and sequential processing as client actions; it is equivalent to a `game:draw` from the current player, except that a player with 20 cards passes even if they hold a legal card (R22). When a disconnected player faces a pending +2 penalty, the server draws it for them in the same way (R10).
