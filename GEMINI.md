@@ -59,12 +59,26 @@ Translations cover the landing page, lobby, gameplay, spectator view, results, v
 
 ### Folder structure
 
-- Every page has its own folder in `frontend/src/pages/<page>/`, for example `landing`, `lobby`, `game`, and `results`.
-- A page folder contains the page component (`<Page>Page.tsx`), a `components/` folder for components used only on that page, a `hooks/` folder for hooks used only on that page, and a `locales/` folder with `en.json`, `hu.json`, and `de.json`.
-- New code starts in the folder of the page that uses it. Move a component or hook to `frontend/src/components/` or `frontend/src/hooks/` only when a second page starts using it.
+The frontend uses a feature-based structure in which every page is a feature:
+
+- `frontend/src/main.tsx`: the entry point only.
+- `frontend/src/app/`: application-level code: the root `App` component, providers, and the selection of the visible page from the room and match state.
+- `frontend/src/pages/<page>/`: one folder per page, for example `landing`, `lobby`, `game`, and `results`. It contains the page component (`<Page>Page.tsx`), a `components/` folder for components used only on that page, a `hooks/` folder for hooks used only on that page, and a `locales/` folder with `en.json`, `hu.json`, and `de.json`.
+- `frontend/src/components/` and `frontend/src/hooks/`: components and hooks used on more than one page.
+- `frontend/src/services/`: non-React infrastructure that exists once for the whole application: the Socket.IO client, the typed wrapper for sending actions and receiving acknowledgements, and the storage of the session in the browser. Services contain no React code and no game logic, and there are no page-specific services.
+- `frontend/src/utils/`: small non-React helpers used on more than one page, such as formatting. The no-game-logic rule applies here as well.
+- `frontend/src/assets/`: images, icons, and fonts.
+- `frontend/src/i18n/`: the i18next setup and the `common` namespace.
+- `frontend/src/styles/`: custom CSS, such as `animations.css`.
+- `frontend/src/test/`: the test setup.
+- There is no `types/` folder: shared types come from `@wildhand/shared`, and types used in a single file stay in that file.
+
+Rules:
+
+- New code starts in the folder of the page that uses it. Move a component, hook, or helper to the shared `components/`, `hooks/`, or `utils/` folder only when a second page starts using it.
 - Break pages down into small components and custom hooks:
   - Components render the interface. Simple state that belongs to a single component, such as whether a menu is open, may stay in that component.
-  - Hooks hold all other state, the Socket.IO communication, timers, and other side effects.
+  - Hooks hold all other state, timers, and other side effects, and connect components to the services, for example by subscribing to Socket.IO events.
 - Use one component per file, named in PascalCase (`PlayerHand.tsx`). Hooks are named `useSomething` in camelCase (`useTurnTimer.ts`).
 
 ### Translation namespaces

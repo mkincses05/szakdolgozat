@@ -54,8 +54,12 @@ Local game state is not allowed: the frontend never changes the hand, the top ca
 
 ### Frontend structure
 
+The frontend uses a feature-based structure in which every page is a feature:
+
 ```
 frontend/src/
+  main.tsx                  entry point
+  app/                      root App component, providers, selection of the visible page
   pages/
     <page>/                 landing, lobby, game, results
       <Page>Page.tsx        page component
@@ -63,15 +67,21 @@ frontend/src/
       hooks/                hooks used only on this page
       locales/              en.json, hu.json, de.json (page namespace)
   components/               components used on more than one page
-  hooks/                    hooks used on more than one page, such as the Socket.IO connection
+  hooks/                    hooks used on more than one page
+  services/                 Socket.IO client, typed actions, session storage
+  utils/                    non-React helpers used on more than one page
+  assets/                   images, icons, fonts
   i18n/
     index.ts                i18next setup
     locales/                en.json, hu.json, de.json (common namespace)
   styles/
     animations.css          custom animations
+  test/                     test setup
 ```
 
-New code starts in the folder of the page that uses it and moves to the shared `components/` or `hooks/` folder only when a second page starts using it. Pages are broken down into small components and custom hooks: components render the interface and may keep simple state that belongs to them alone, such as whether a menu is open; hooks hold all other state, the Socket.IO communication, timers, and other side effects.
+New code starts in the folder of the page that uses it and moves to the shared `components/`, `hooks/`, or `utils/` folder only when a second page starts using it. Pages are broken down into small components and custom hooks: components render the interface and may keep simple state that belongs to them alone, such as whether a menu is open; hooks hold all other state, timers, and other side effects, and connect components to the services.
+
+The services are the non-React infrastructure that exists once for the whole application: the single Socket.IO connection, a typed wrapper that sends actions with a generated `actionId` and returns their acknowledgements, and the storage of the reconnect token in the browser. They contain no React code and no game logic, so they can be tested without rendering components. There is no `types/` folder, because shared types come from `@wildhand/shared`.
 
 ### Styling
 
