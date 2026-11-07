@@ -88,7 +88,9 @@ export function createPgMatchResultStore(pool: Pool): MatchResultStore {
             if (player.kind !== "registered" || player.accountId === null) {
               continue;
             }
-            const won = player.finishPosition === 1 && player.finalStatus !== "forfeited";
+            // Only the player alone in first place has won; a shared first place after a blocked
+            // game (R18) has no winner.
+            const won = player.seat === record.winnerSeat;
             const forfeited = player.finalStatus === "forfeited";
             // Increased in SQL, never read and written back, so concurrent matches cannot lose updates.
             await client.query(

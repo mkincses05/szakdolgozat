@@ -24,7 +24,8 @@ export interface AccountState {
 export interface AccountValue extends AccountState {
   login: (payload: LoginPayload) => Promise<AccountResult<AccountProfile>>;
   register: (payload: RegisterPayload) => Promise<AccountResult<AccountProfile>>;
-  logout: () => Promise<void>;
+  /** Logs out only when the server confirms it, so a still valid cookie is never left behind. */
+  logout: () => Promise<AccountResult>;
   /** Fetches the profile again, for example after a match changed the XP. */
   refresh: () => Promise<void>;
   continueAsGuest: () => void;

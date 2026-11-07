@@ -72,5 +72,7 @@ describe("LobbyPage", () => {
     expect(await screen.findByRole("button", { name: "Create room" })).toBeInTheDocument();
     expect(fakeSocket.emitWithAck).toHaveBeenLastCalledWith("room:leave", expect.objectContaining({ actionId: expect.any(String) }));
     expect(loadSession()).toBeNull();
+    // A match may have changed the XP, so the profile is fetched again.
+    expect(vi.mocked(fetch).mock.calls.filter(([url]) => String(url).endsWith("/api/auth/me"))).toHaveLength(2);
   });
 });

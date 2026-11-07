@@ -2,13 +2,12 @@
 // profile. The login cookie is HttpOnly, so this code never sees it; `credentials: "include"` lets
 // the browser send and store it.
 
-import { isErrorCode, type AccountProfile, type LoginPayload, type RegisterPayload } from "@wildhand/shared";
-import type { ActionErrorCode } from "./actions";
+import { isErrorCode, type AccountProfile, type Ack, type LoginPayload, type RegisterPayload } from "@wildhand/shared";
+import type { ClientErrorCode } from "./actions";
 import { SERVER_URL } from "./serverUrl";
 
-export type AccountResult<T = undefined> =
-  | (T extends undefined ? { ok: true } : { ok: true; data: T })
-  | { ok: false; code: ActionErrorCode };
+/** The server's answer, which has the shape of a Socket.IO acknowledgement, or a client-side error. */
+export type AccountResult<T = undefined> = Ack<T> | { ok: false; code: ClientErrorCode };
 
 async function request<T>(method: "GET" | "POST", path: string, body?: unknown): Promise<AccountResult<T>> {
   let response: Response;

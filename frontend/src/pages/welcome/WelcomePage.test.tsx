@@ -108,6 +108,16 @@ describe("WelcomePage", () => {
     expect(screen.getByRole("button", { name: "Continue as a guest" })).toBeInTheDocument();
   });
 
+  it("stays logged in and shows the error when the server does not confirm the logout", async () => {
+    stubAccountApi({ "/me": { ok: true, data: profile }, "/logout": { ok: false, code: "internal_error" } });
+    render(<App />);
+
+    fireEvent.click(await screen.findByRole("button", { name: "Log out" }));
+
+    expect(await screen.findByRole("alert")).toHaveTextContent("Something went wrong on the server.");
+    expect(screen.getByText("Logged in as Anna (anna_k)")).toBeInTheDocument();
+  });
+
   it("logs out from the landing page and returns to the welcome page", async () => {
     stubAccountApi({ "/me": { ok: true, data: profile } });
     render(<App />);

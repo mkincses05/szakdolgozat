@@ -1,9 +1,9 @@
 import { DISPLAY_NAME_MAX_LENGTH, DISPLAY_NAME_MIN_LENGTH, ROOM_CODE_LENGTH } from "@wildhand/shared";
-import { useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { ErrorMessage } from "../../components/ErrorMessage";
 import { LanguageSelect } from "../../components/LanguageSelect";
 import { useAccount } from "../../hooks/useAccount";
+import { useAction } from "../../hooks/useAction";
 import { AccountSummary } from "./components/AccountSummary";
 import { DisplayNameField } from "./components/DisplayNameField";
 import { JoinRoomForm } from "./components/JoinRoomForm";
@@ -11,13 +11,9 @@ import { useLandingForm } from "./hooks/useLandingForm";
 
 export function LandingPage() {
   const { t } = useTranslation("landing");
-  const { profile, refresh, logout, showWelcome } = useAccount();
+  const { profile, logout, showWelcome } = useAccount();
   const form = useLandingForm(profile?.displayName ?? null);
-
-  // The XP and counters change when a match ends, so the profile is fetched again on return.
-  useEffect(() => {
-    void refresh();
-  }, [refresh]);
+  const logoutAction = useAction();
 
   return (
     <main className="flex max-w-sm flex-col gap-4">
@@ -26,7 +22,14 @@ export function LandingPage() {
 
       <LanguageSelect />
       {profile ? (
-        <AccountSummary profile={profile} onLogout={() => void logout()} />
+        <>
+          <AccountSummary
+            profile={profile}
+            onLogout={() => void logoutAction.run(logout)}
+            logoutPending={logoutAction.pending}
+          />
+          <ErrorMessage code={logoutAction.error} />
+        </>
       ) : (
         <>
           <button type="button" className="border px-2 py-1" onClick={showWelcome}>

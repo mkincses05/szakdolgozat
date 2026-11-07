@@ -72,7 +72,7 @@ export function registerHandlers(
     socket.data.account = null;
     void (async () => {
       try {
-        const account = await auth.authenticate(readLoginCookie(socket.handshake.headers.cookie));
+        const account = await auth.authenticate(readLoginCookie(socket.handshake.headers.cookie), { renew: false });
         socket.data.account = account && { id: account.id, displayName: account.displayName };
       } catch (error) {
         // Without a reachable database the player still connects, as a guest.

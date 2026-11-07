@@ -86,7 +86,7 @@ PostgreSQL stores registered user accounts and a statistics log of finished matc
 
 ### Writing the result of a match
 
-When a match ends, the server writes the `matches` row, every `match_players` row, and the counter updates of all registered participants in a single transaction. Counters are increased atomically in SQL (for example `xp = xp + $1`), never read, changed, and written back. An `aborted` match is logged but does not change any counter. A failed database write is logged and never blocks or changes the match.
+When a match ends, the server writes the `matches` row, every `match_players` row, and the counter updates of all registered participants in a single transaction. Counters are increased atomically in SQL (for example `xp = xp + $1`), never read, changed, and written back. Only the player alone in first place counts a win: after a blocked game in which no one finished, the remaining players share first place, the match has no winner seat, and nobody's `wins` increases (they still earn XP for their position). An `aborted` match is logged but does not change any counter. A failed database write is logged and never blocks or changes the match.
 
 ### Experience points
 
@@ -100,9 +100,9 @@ Login uses server-side sessions instead of JWT, so logging out really revokes ac
 - A user logs in with the username or the email address; a value containing `@` is treated as an email. A wrong username, email, or password gives the same `invalid_credentials` answer.
 - Passwords are stored as argon2id hashes in `user_credentials`.
 - The server issues a random 32-byte token and stores only its SHA-256 hash in `auth_sessions`. The browser receives the token in the `wildhand_session` cookie, which is `HttpOnly`, `SameSite=Lax`, and `Secure` in production.
-- A session expires after 30 days without use. Using it moves the expiry to 30 days later, at most once a day. Logging out deletes the row; expired rows of a user are deleted when that user logs in.
+- A session expires after 30 days without use. An HTTP request with the cookie, such as loading the profile, moves the expiry to 30 days later, at most once a day, and renews the cookie with it. A Socket.IO handshake only checks the session and never moves the expiry, because it cannot renew the cookie. Logging out deletes the row; expired rows of a user are deleted when that user logs in.
 - The Socket.IO connection reads the cookie when it connects. A logged-in player joins rooms under the account's display name instead of the typed name, and one account can take only one seat in a room (`account_already_in_room`). Logging in or out takes effect when the client reconnects.
-- Without a database, the account API answers `database_unavailable` and every player plays as a guest.
+- Without a database, the account API answers `database_unavailable` and every player plays as a guest. Every connection attempt and query times out after 5 seconds, so an unreachable database never keeps a player waiting; the player then connects as a guest.
 
 The account API is served by Express under `/api/auth`; every response has the shape of a Socket.IO acknowledgement (`{ ok: true, data }` or `{ ok: false, code }`):
 

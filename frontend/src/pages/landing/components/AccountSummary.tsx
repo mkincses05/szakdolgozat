@@ -4,9 +4,10 @@ import { useTranslation } from "react-i18next";
 interface AccountSummaryProps {
   profile: AccountProfile;
   onLogout: () => void;
+  logoutPending: boolean;
 }
 
-export function AccountSummary({ profile, onLogout }: AccountSummaryProps) {
+export function AccountSummary({ profile, onLogout, logoutPending }: AccountSummaryProps) {
   const { t } = useTranslation("landing");
 
   const stats = [
@@ -27,7 +28,7 @@ export function AccountSummary({ profile, onLogout }: AccountSummaryProps) {
           </div>
         ))}
       </dl>
-      <button type="button" className="border px-2 py-1" onClick={onLogout}>
+      <button type="button" className="border px-2 py-1" disabled={logoutPending} onClick={onLogout}>
         {t("account.logout")}
       </button>
     </section>

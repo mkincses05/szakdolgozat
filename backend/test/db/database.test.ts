@@ -235,6 +235,21 @@ describe.skipIf(!testDatabaseUrl)("PostgreSQL", () => {
       expect(await counters(quitter)).toEqual({ xp: 0, matches_played: 1, wins: 0, forfeits: 1 });
     });
 
+    it("counts no win for a shared first place after a blocked game (R18)", async () => {
+      const first = await createUser("Blocked_A");
+      const second = await createUser("Blocked_B");
+
+      await store.save(
+        record({ endReason: "blocked", winnerSeat: null }, [
+          player(0, { kind: "registered", accountId: first, finishPosition: 1, xpEarned: 20 }),
+          player(1, { kind: "registered", accountId: second, finishPosition: 1, xpEarned: 20 })
+        ])
+      );
+
+      expect(await counters(first)).toEqual({ xp: 20, matches_played: 1, wins: 0, forfeits: 0 });
+      expect(await counters(second)).toEqual({ xp: 20, matches_played: 1, wins: 0, forfeits: 0 });
+    });
+
     it("logs an aborted match without positions and changes no counter", async () => {
       const userId = await createUser("Aborted");
 

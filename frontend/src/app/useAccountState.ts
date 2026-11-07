@@ -3,8 +3,9 @@
 // change of the account.
 
 import type { AccountProfile, LoginPayload, RegisterPayload } from "@wildhand/shared";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { AccountStatus, AccountValue } from "../hooks/useAccount";
+import { useServerState } from "../hooks/useServerState";
 import * as accountApi from "../services/account";
 import type { AccountResult } from "../services/account";
 import type { ActionErrorCode } from "../services/actions";
@@ -43,6 +44,17 @@ export function useAccountState(): AccountValue {
     void refresh();
   }, [refresh]);
 
+  // A match changes the XP and the counters, so the profile is fetched again when the player
+  // leaves the room.
+  const { session } = useServerState();
+  const hadSession = useRef(session !== null);
+  useEffect(() => {
+    if (hadSession.current && session === null) {
+      void refresh();
+    }
+    hadSession.current = session !== null;
+  }, [session, refresh]);
+
   const signIn = useCallback(
     async (request: () => Promise<AccountResult<AccountProfile>>) => {
       const result = await request();
@@ -60,12 +72,16 @@ export function useAccountState(): AccountValue {
   const register = useCallback((payload: RegisterPayload) => signIn(() => accountApi.register(payload)), [signIn]);
 
   const logout = useCallback(async () => {
-    await accountApi.logout();
+    const result = await accountApi.logout();
+    if (!result.ok) {
+      return result;
+    }
     setProfile(null);
     setStatus("loggedOut");
     saveGuestChoice(false);
     setContinuedAsGuest(false);
     reconnectSocket();
+    return result;
   }, []);
 
   const continueAsGuest = useCallback(() => {

@@ -13,10 +13,12 @@ export function verifyPassword(passwordHash: string, password: string): Promise<
   return verify(passwordHash, password);
 }
 
-/** A valid hash of a random password, verified when a login names no account, so both cases take as long. */
-let dummyHash: Promise<string> | null = null;
+/**
+ * A valid hash of a random password, verified when a login names no account, so both cases take as
+ * long. It is created when the module loads, so the first such login is not slower either.
+ */
+const dummyHash: Promise<string> = hash(randomBytes(16).toString("hex"));
 export function verifyAgainstDummy(password: string): Promise<boolean> {
-  dummyHash ??= hash(randomBytes(16).toString("hex"));
   return dummyHash.then((value) => verify(value, password));
 }
 

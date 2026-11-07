@@ -161,9 +161,10 @@ export class MatchController {
       };
     });
 
-    // The first player to finish is the winner, even if the match was aborted later.
-    const winnerId = results?.winnerId ?? this.state.finishingOrder[0];
-    const winner = this.state.players.find((player) => player.userId === winnerId);
+    // The winner is the player alone in first place, even if the match was aborted later. A blocked
+    // game before anyone finished gives several players the shared first place (R18): no winner.
+    const firstPlace = this.state.players.filter((player) => player.finishPosition === 1);
+    const winner = firstPlace.length === 1 ? firstPlace[0] : undefined;
 
     return {
       seed: this.options.seed,

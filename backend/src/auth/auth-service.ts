@@ -2,7 +2,7 @@
 // section 2). Without a database every account operation answers `database_unavailable`; playing as
 // a guest keeps working.
 
-import type { AccountProfile, ErrorCode, LoginPayload, RegisterPayload } from "@wildhand/shared";
+import type { AccountProfile, Ack, LoginPayload, RegisterPayload } from "@wildhand/shared";
 import type { AccountStore } from "./account-store.js";
 import { hashLoginToken, hashPassword, newLoginToken, verifyAgainstDummy, verifyPassword } from "./credentials.js";
 
@@ -12,7 +12,8 @@ export const SESSION_LIFETIME_MS = 30 * DAY_MS;
 /** Using a session moves its expiry, at most once a day, so not every request writes to the database. */
 export const SESSION_REFRESH_INTERVAL_MS = DAY_MS;
 
-export type AuthResult<T> = { ok: true; data: T } | { ok: false; code: ErrorCode };
+/** The same shape as a Socket.IO acknowledgement. */
+export type AuthResult<T> = Ack<T>;
 
 export interface LoginSession {
   profile: AccountProfile;
@@ -24,7 +25,7 @@ export interface LoginSession {
 export interface AuthenticatedAccount {
   id: string;
   displayName: string;
-  /** Set when the expiry moved, so an HTTP response can renew the cookie. */
+  /** Set when the expiry moved, so the HTTP response renews the cookie as well. */
   renewedUntil: Date | null;
 }
 
@@ -76,8 +77,12 @@ export class AuthService {
     }
   }
 
-  /** The account behind a login token, or `null` for a guest, an unknown, or an expired token. */
-  async authenticate(token: string | undefined): Promise<AuthenticatedAccount | null> {
+  /**
+   * The account behind a login token, or `null` for a guest, an unknown, or an expired token.
+   * `renew` moves the expiry; only an HTTP response can renew the cookie as well, so a Socket.IO
+   * handshake must not renew, or the database and the cookie would expire at different times.
+   */
+  async authenticate(token: string | undefined, { renew }: { renew: boolean }): Promise<AuthenticatedAccount | null> {
     if (!this.store || !token) {
       return null;
     }
@@ -90,7 +95,7 @@ export class AuthService {
     }
 
     let renewedUntil: Date | null = null;
-    if (now.getTime() - session.lastUsedAt.getTime() >= SESSION_REFRESH_INTERVAL_MS) {
+    if (renew && now.getTime() - session.lastUsedAt.getTime() >= SESSION_REFRESH_INTERVAL_MS) {
       renewedUntil = new Date(now.getTime() + SESSION_LIFETIME_MS);
       await this.store.extendSession(tokenHash, now, renewedUntil);
     }
@@ -103,7 +108,7 @@ export class AuthService {
       return { ok: false, code: "database_unavailable" };
     }
 
-    const account = await this.authenticate(token);
+    const account = await this.authenticate(token, { renew: true });
     const profile = account && (await this.store.getProfile(account.id));
     if (!account || !profile) {
       return { ok: false, code: "not_logged_in" };

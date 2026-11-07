@@ -4,12 +4,23 @@
 import { Pool } from "pg";
 import type { Logger } from "../logger.js";
 
+/**
+ * An unreachable database must not keep a player waiting: a connection attempt or query that takes
+ * longer fails, and the caller falls back (for example, the player connects as a guest).
+ */
+const DATABASE_TIMEOUT_MS = 5_000;
+
 export function createPool(databaseUrl: string | null, logger: Logger): Pool | null {
   if (databaseUrl === null) {
     return null;
   }
 
-  const pool = new Pool({ connectionString: databaseUrl });
+  const pool = new Pool({
+    connectionString: databaseUrl,
+    connectionTimeoutMillis: DATABASE_TIMEOUT_MS,
+    query_timeout: DATABASE_TIMEOUT_MS,
+    statement_timeout: DATABASE_TIMEOUT_MS
+  });
   // Without a listener, an error on an idle connection (for example a database restart) would crash the server.
   pool.on("error", (error) => logger.error("Idle database connection failed.", error));
   return pool;
