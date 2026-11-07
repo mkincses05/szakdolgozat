@@ -95,6 +95,36 @@ describe("account API", () => {
   });
 });
 
+describe("account API with a failing database", () => {
+  /** A store whose every call fails with the given error. */
+  function failingStore(error: Error): AccountStore {
+    const store = new MemoryAccountStore();
+    for (const method of ["findByLogin", "findSession", "createAccount"] as const) {
+      (store as unknown as Record<string, () => Promise<never>>)[method] = () => Promise.reject(error);
+    }
+    return store;
+  }
+
+  it("answers database_unavailable when the database cannot be reached", async () => {
+    const base = await start(failingStore(new Error("Connection terminated due to connection timeout")));
+
+    const me = await fetch(`${base}/api/auth/me`, { headers: { Cookie: "wildhand_session=abcdefgh" } });
+    expect(me.status).toBe(503);
+    expect(await me.json()).toEqual({ ok: false, code: "database_unavailable" });
+
+    const login = await post(`${base}/api/auth/login`, { login: "anna_k", password: anna.password });
+    expect(await login.json()).toEqual({ ok: false, code: "database_unavailable" });
+  });
+
+  it("still answers internal_error for any other failure", async () => {
+    const base = await start(failingStore(new TypeError("Cannot read properties of undefined")));
+
+    const login = await post(`${base}/api/auth/login`, { login: "anna_k", password: anna.password });
+    expect(login.status).toBe(500);
+    expect(await login.json()).toEqual({ ok: false, code: "internal_error" });
+  });
+});
+
 describe("login cookie on the Socket.IO connection", () => {
   it("plays under the account name when the cookie is sent, and as a guest without it", async () => {
     const base = await start();

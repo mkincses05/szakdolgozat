@@ -5,6 +5,7 @@ import { loginPayloadSchema, registerPayloadSchema, type ErrorCode } from "@wild
 import { Router, type Request, type Response } from "express";
 import type { AuthService, LoginSession } from "../auth/auth-service.js";
 import { clearedLoginCookie, loginCookie, readLoginCookie } from "../auth/cookies.js";
+import { isDatabaseUnavailable } from "../db/errors.js";
 import type { Logger } from "../logger.js";
 
 const STATUS: Partial<Record<ErrorCode, number>> = {
@@ -35,13 +36,21 @@ export function createAuthRouter({ auth, logger, secureCookies, now }: AuthRoute
     response.status(status).json({ ok: true, data: session.profile });
   };
 
-  /** Turns an unexpected error into `internal_error` without leaking details. */
+  /**
+   * An unreachable database answers `database_unavailable`, like running without one; any other
+   * unexpected error answers `internal_error`. Neither leaks details.
+   */
   const handle =
     (name: string, run: (request: Request, response: Response) => Promise<void>) =>
     async (request: Request, response: Response) => {
       try {
         await run(request, response);
       } catch (error) {
+        if (isDatabaseUnavailable(error)) {
+          logger.warn(`The database is not reachable in ${name}: ${(error as Error).message}`);
+          fail(response, "database_unavailable");
+          return;
+        }
         logger.error(`Unexpected error in ${name}`, error);
         fail(response, "internal_error");
       }
