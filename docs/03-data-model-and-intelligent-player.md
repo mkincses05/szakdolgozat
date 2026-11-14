@@ -205,35 +205,32 @@ The bots are evaluated with a headless simulator that runs complete matches with
 
 ### Metrics
 
-- Average finishing position, normalized by player count.
-- Win rate with a 95% confidence interval.
+- Average finishing position, normalized by player count: 0 for always first, 1 for always last, 0.5 for equal strength.
+- Win rate with a 95% confidence interval, compared with the win rate of an equally strong player (1 / number of players).
 - Average decision time and maximum decision time.
 - Number of rejected actions (expected to be 0).
-- Results by player count (2–8) and by seat.
-- Frequency of blocked games and forfeits.
+- Results by player count (2, 4, and 8 players in the large measurement).
+- Frequency of blocked games.
 
 ### Measurement setup
 
 - Run each comparison for a fixed number of matches with fixed seeds, so the results are reproducible.
-- Compare every bot level with the random and the rule-based baselines.
+- Compare every bot level with every lower level, with one bot of the stronger level against bots of the lower level.
 - Rotate seats so that the starting seat does not bias the results.
-- Record results per match and per action.
+- Limit the sampling bot by a fixed number of playouts per decision (`--max-playouts`) instead of by time, so the result does not depend on the machine or its load and runs can go in parallel.
 - Log every measurement during development in `docs/05-bot-measurement-log.md`, so the development of the bots can be followed.
 
 The tournament is `backend/tools/simulate/tournament.ts`; `backend/tools/simulate/tune.ts` tunes the heuristic bot's weights.
 
 ## 5. Data Needed for Evaluation
 
-The headless simulator records the following data in its own output files; it is not stored in PostgreSQL.
+The tournament prints a summary and, with `--out`, writes a JSON file; nothing is stored in PostgreSQL. The raw results of the measurements are kept locally, outside the repository.
 
-- Per match: seed, player count, bot level per seat, finishing order, and end reason.
-- Every action with the random values selected for it, so a simulated match can be replayed.
-- The available legal actions at each decision and the chosen action.
-- Decision timing.
-- Storm values with requested and actual draw amounts after the hand limit.
-- Reshuffle events and whether a new deck was added.
-- +2 chain lengths and outcomes.
-- Forfeits, and spectator or leave events.
+- Per match: seed, bot level per seat, finishing position per seat, end reason, number of actions, and rejected actions.
+- Per level: matches played, average normalized position with its confidence interval, win rate with its confidence interval, forfeits, and average and maximum decision time.
+- Per run: the settings, the end reasons, and the number of rejected actions.
+
+Single actions, Storm values, reshuffles, and +2 chains are not recorded. They are not needed for comparing the levels, and a match can be replayed from its seed to inspect them: the match and every bot draw their random numbers from generators seeded from it, so a run limited by playouts plays exactly the same matches again.
 
 ## 6. Success Criteria
 
@@ -245,8 +242,12 @@ The intelligent player is considered acceptable if it:
 - Produces stable results across repeated runs with different seeds.
 - Handles +2 chains, Swap, Spy, and Color Change correctly.
 
-## 7. Open Questions
+All criteria are met (`docs/05`, entry 20): no rejected action in 13,500 matches; the slowest level decides in about 0.25–0.4 s against a 30 s turn timer; every level beats the random baseline and every lower level significantly with 2, 4, and 8 players; repeated measurements with other seeds agree within their confidence intervals; and the special cards are covered by the tests of the legal actions, which check against the engine that every listed action is accepted.
 
-- Should the bot be playable in the final version as a seat filler, or used only for testing and evaluation?
-- Should the bot optimize only for winning, or also for realistic, human-like play?
-- Which metrics matter most for the thesis evaluation?
+## 7. Decisions
+
+The open questions of the plan were decided as follows:
+
+- **Seat filler or test tool:** bots are part of the final game. The host adds them in the lobby with one of four levels, and they also serve the measurements.
+- **Winning or human-like play:** the bots play to win. They are not modeled on human players; they only wait a short thinking time before each move, so humans can follow the game.
+- **Metrics for the evaluation:** the average normalized finishing position and the win rate with 95% confidence intervals, compared with an equally strong player, for each pair of levels and for 2, 4, and 8 players.
