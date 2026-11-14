@@ -26,7 +26,7 @@ describe("lobby", () => {
       code: "ROOM01",
       state: "lobby",
       hostUserId: "u1",
-      members: [{ userId: "u1", displayName: "Anna", presence: "connected" }],
+      members: [{ userId: "u1", displayName: "Anna", presence: "connected", isBot: false, botLevel: null }],
       minPlayers: 2,
       maxPlayers: 8
     });
@@ -357,6 +357,7 @@ describe("storing results (docs/03 section 2)", () => {
             seat: 0,
             kind: "guest",
             accountId: null,
+            botLevel: null,
             displayName: "Player 1",
             finalStatus: "finished",
             finishPosition: 1,
@@ -366,6 +367,7 @@ describe("storing results (docs/03 section 2)", () => {
             seat: 1,
             kind: "guest",
             accountId: null,
+            botLevel: null,
             displayName: "Player 2",
             finalStatus: "forfeited",
             finishPosition: 2,

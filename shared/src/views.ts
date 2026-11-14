@@ -1,6 +1,7 @@
 // Room and match views sent to clients. Private hands appear only in the owner's view (R25).
 // See docs/02-server-state-machine-and-socketio.md, section 3.
 
+import type { BotLevel } from "./bots.js";
 import type { Card, CardColor } from "./cards.js";
 import type { MatchPhase, MatchStatus, Presence, RoomState } from "./status.js";
 
@@ -8,6 +9,9 @@ export interface RoomMemberView {
   userId: string;
   displayName: string;
   presence: Presence;
+  isBot: boolean;
+  /** `null` for human players. */
+  botLevel: BotLevel | null;
 }
 
 export interface RoomView {
@@ -30,6 +34,8 @@ export interface PublicPlayerView {
   presence: Presence;
   finishPosition: number | null;
   isBot: boolean;
+  /** `null` for human players. */
+  botLevel: BotLevel | null;
 }
 
 /** Match state visible to everyone in the match, including spectators (R25). */

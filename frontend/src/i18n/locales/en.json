@@ -39,6 +39,15 @@
     "disconnected": "disconnected",
     "left": "left"
   },
+  "bots": {
+    "tag": "bot, {{level}}",
+    "levels": {
+      "random": "random",
+      "rule_based": "rule-based",
+      "heuristic": "heuristic",
+      "sampling": "sampling"
+    }
+  },
   "errors": {
     "invalid_payload": "The request was invalid.",
     "stale_state": "The game changed in the meantime. Please try again.",
@@ -59,6 +68,7 @@
     "not_host": "Only the host can do this.",
     "not_enough_players": "There are not enough players to start the match.",
     "too_many_players": "There are too many players in the room.",
+    "bot_not_found": "That bot is no longer in the room.",
     "match_not_running": "No match is running.",
     "not_in_match": "You are not playing in this match.",
     "player_not_active": "You are no longer an active player in this match.",

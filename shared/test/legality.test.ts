@@ -37,6 +37,7 @@ function playerView(userId: string, overrides: Partial<PublicPlayerView> = {}): 
     presence: "connected",
     finishPosition: null,
     isBot: false,
+    botLevel: null,
     ...overrides
   };
 }

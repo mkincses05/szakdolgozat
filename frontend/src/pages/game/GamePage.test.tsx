@@ -23,8 +23,8 @@ const room: RoomView = {
   state: "in_match",
   hostUserId: "u1",
   members: [
-    { userId: "u1", displayName: "Anna", presence: "connected" },
-    { userId: "u2", displayName: "Bela", presence: "connected" }
+    { userId: "u1", displayName: "Anna", presence: "connected", isBot: false, botLevel: null },
+    { userId: "u2", displayName: "Bela", presence: "connected", isBot: false, botLevel: null }
   ],
   minPlayers: 2,
   maxPlayers: 8
@@ -37,9 +37,9 @@ function matchView(overrides: Partial<PlayerMatchView> = {}): PlayerMatchView {
     matchId: "m1",
     phase: "awaiting_action",
     players: [
-      { userId: "u1", displayName: "Anna", seat: 0, handSize: 6, matchStatus: "active", presence: "connected", finishPosition: null, isBot: false },
-      { userId: "u2", displayName: "Bela", seat: 1, handSize: 1, matchStatus: "active", presence: "disconnected", finishPosition: null, isBot: false },
-      { userId: "u3", displayName: "Cili", seat: 2, handSize: 3, matchStatus: "active", presence: "connected", finishPosition: null, isBot: false }
+      { userId: "u1", displayName: "Anna", seat: 0, handSize: 6, matchStatus: "active", presence: "connected", finishPosition: null, isBot: false, botLevel: null },
+      { userId: "u2", displayName: "Bela", seat: 1, handSize: 1, matchStatus: "active", presence: "disconnected", finishPosition: null, isBot: false, botLevel: null },
+      { userId: "u3", displayName: "Cili", seat: 2, handSize: 3, matchStatus: "active", presence: "connected", finishPosition: null, isBot: false, botLevel: null }
     ],
     currentPlayerId: "u1",
     topCard: { id: "r2", deckInstance: 1, kind: "number", color: "red", number: 2 },

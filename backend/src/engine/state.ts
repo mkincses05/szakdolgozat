@@ -3,6 +3,7 @@
 
 import { isValidTarget } from "@wildhand/shared";
 import type {
+  BotLevel,
   Card,
   CardColor,
   ErrorCode,
@@ -24,6 +25,8 @@ export interface MatchPlayer {
   presence: Presence;
   finishPosition: number | null;
   isBot: boolean;
+  /** `null` for human players. */
+  botLevel: BotLevel | null;
 }
 
 export interface MatchState {
@@ -70,6 +73,23 @@ export type PrivateEvent =
 export type EngineResult =
   | { ok: true; state: MatchState; effects: GameEffect[]; privateEvents: PrivateEvent[] }
   | { ok: false; code: ErrorCode };
+
+/**
+ * Copy of the state for an action to change. Card objects are never changed by the engine, only
+ * moved between piles and hands, so they are shared; every array and player object is new. Much
+ * cheaper than a deep copy, which matters for the sampling bot's playouts.
+ */
+export function cloneState(state: MatchState): MatchState {
+  return {
+    ...state,
+    players: state.players.map((player) => ({ ...player, hand: [...player.hand] })),
+    drawPile: [...state.drawPile],
+    discardPile: [...state.discardPile],
+    removedCards: [...state.removedCards],
+    finishingOrder: [...state.finishingOrder],
+    forfeitOrder: [...state.forfeitOrder]
+  };
+}
 
 export function findPlayer(state: MatchState, userId: string): MatchPlayer | undefined {
   return state.players.find((player) => player.userId === userId);

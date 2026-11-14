@@ -8,5 +8,17 @@
   "host": "Gastgeber",
   "start": "Spiel starten",
   "waitingForHost": "Warte darauf, dass der Gastgeber das Spiel startet.",
-  "leave": "Raum verlassen"
+  "leave": "Raum verlassen",
+  "bots": {
+    "title": "Computerspieler",
+    "level": "Spielstärke",
+    "add": "Bot hinzufügen",
+    "remove": "{{name}} entfernen",
+    "descriptions": {
+      "random": "Spielt einen zufälligen erlaubten Zug. Der schwächste Gegner.",
+      "rule_based": "Folgt festen Prioritäten, beantwortet zum Beispiel eine +2 mit einer +2.",
+      "heuristic": "Bewertet jeden Zug, hebt zum Beispiel Jokerkarten für später auf.",
+      "sampling": "Stellt sich die verdeckten Karten viele Male vor und simuliert das Spiel voraus."
+    }
+  }
 }

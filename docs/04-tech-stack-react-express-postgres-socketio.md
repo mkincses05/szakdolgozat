@@ -6,17 +6,17 @@ This project uses a TypeScript-based full-stack setup: a React frontend, a Node.
 
 - `backend/`: Express and Socket.IO server, game engine, persistence.
 - `frontend/`: React application built with Vite.
-- `shared/`: the `@wildhand/shared` ES module package used by both the backend and the frontend: card types, the 104-card deck definition, rule constants, the single-card legality rule (`isPlayableOn`, also used by the engine) with legal-play helpers that work on a player's own view, error codes, client views, Socket.IO event names, typed event maps, and zod payload schemas. Build it with `npm run build` in `shared/` before the backend or frontend uses it.
+- `shared/`: the `@wildhand/shared` ES module package used by both the backend and the frontend: card types, the 104-card deck definition, rule constants, the single-card legality rule (`isPlayableOn`, also used by the engine) with legal-play helpers that work on a player's own view (including `getLegalActions`, the list of every distinct action used by the bots), error codes, client views, Socket.IO event names, typed event maps, and zod payload schemas. Build it with `npm run build` in `shared/` before the backend or frontend uses it.
 - `docs/`: technical documentation.
 
-The game engine (`backend/src/engine/`) is a pure TypeScript module without Socket.IO or database dependencies, so it can be tested directly and reused by the headless bot simulator (`docs/03`). Every action takes the current match state and an injectable random number generator, and returns either a new state with the public effects and the private events, or an error code without changing the state. Its tests are in `backend/test/engine/`.
+The game engine (`backend/src/engine/`) is a pure TypeScript module without Socket.IO or database dependencies, so it can be tested directly and reused by the computer players and the headless bot simulator (`docs/03`). The bots are in `backend/src/bots/`; they decide only from the messages a human client in their seat would receive. `backend/tools/simulate/` contains the single-match simulator (`simulate.ts`), the bot tournament (`tournament.ts`), and the tuning of the heuristic bot's weights (`tune.ts`). Every action takes the current match state and an injectable random number generator, and returns either a new state with the public effects and the private events, or an error code without changing the state. Its tests are in `backend/test/engine/`.
 
 Around the engine, the backend has two more layers:
 
 - `backend/src/game/`: the room service (rooms, sessions, host transfer, reconnect grace periods, duplicate and stale actions) and the match controller (seed, turn timer, delivery of effects, private events, and personal views). It has no Socket.IO dependency; time comes from an injectable scheduler, and messages leave through a transport interface addressed to single users.
 - `backend/src/socket/`: the Socket.IO handlers, which validate payloads with the shared zod schemas, answer with acknowledgements, and route each message to the socket of its user.
 
-The server is configured with `PORT`, `CORS_ORIGIN`, `TURN_TIMEOUT_MS`, `RECONNECT_GRACE_MS`, and `DATABASE_URL` (see `backend/.env.example`). `CORS_ORIGIN` must be the exact frontend origin (default `http://localhost:5173`), because the browser sends the login cookie with requests; `*` is rejected. With `NODE_ENV=production`, the login cookie is sent only over HTTPS.
+The server is configured with `PORT`, `CORS_ORIGIN`, `TURN_TIMEOUT_MS`, `RECONNECT_GRACE_MS`, `DATABASE_URL`, and the bot settings `BOT_THINK_MIN_MS`, `BOT_THINK_MAX_MS`, `BOT_SAMPLING_BUDGET_MS`, and `BOT_SAMPLING_WORKERS` (see `backend/.env.example`). `CORS_ORIGIN` must be the exact frontend origin (default `http://localhost:5173`), because the browser sends the login cookie with requests; `*` is rejected. With `NODE_ENV=production`, the login cookie is sent only over HTTPS.
 
 ## React + TypeScript
 

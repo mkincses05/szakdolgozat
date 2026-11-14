@@ -4,7 +4,8 @@
   "endReason": {
     "last_player": "The match ended because only one active player remained.",
     "blocked": "The match ended because every remaining player held 20 cards and none could play. They share the next position.",
-    "forfeits": "The match ended because players forfeited."
+    "forfeits": "The match ended because players forfeited.",
+    "no_humans": "The match ended because no human player was left. The remaining bots share the next position."
   },
   "standings": "Final standings",
   "place": "{{position}}. {{name}}",

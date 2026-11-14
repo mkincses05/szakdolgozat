@@ -14,6 +14,19 @@ The first player whose hand becomes empty after the complete resolution of their
 
 The winner and the order in which the other players finish are shown in the final results.
 
+## 🤖 Playing Against Bots
+
+The room host can fill empty seats with **computer players (bots)** in the lobby, before starting the match. Bots take a seat like any other player and count towards the 8-player limit. There are four levels:
+
+* **Random**: plays a random allowed move. The weakest opponent, good for learning the rules.
+* **Rule-based**: follows a few fixed rules, for example it answers a +2 with a +2 and keeps its +2 cards for that, but it plays only one card per turn and never uses combos.
+* **Heuristic**: weighs every possible move, for example it plays whole number groups at once and keeps wild cards for later.
+* **Sampling**: imagines the cards it cannot see many times and plays the game ahead in its head before choosing a move.
+
+Bots play fair: they only know what a human player in their seat would know, so they never see your hand unless they look at it with **Spy**. They think for about a second before each move, so you can follow what they do.
+
+Bots finish in positions like everyone else, so a registered player also earns XP for every bot that finishes behind them. If every human player leaves the room, a match with bots ends: the remaining bots share the next position.
+
 ## 🌍 Internationalization
 
 The game will be available in:
@@ -237,7 +250,7 @@ Each turn has a time limit. If it runs out, the game acts for the player: they d
 
 If a player loses their connection, they have a short time to reconnect. Their turns are skipped until they return, except that a +2 penalty aimed at them is still drawn for them. A player who does not return in time, or who leaves an unfinished match, **forfeits**: their cards are removed from the game and they are ranked below every player who finished or was still playing.
 
-If the room host leaves, the player who has been in the room the longest becomes the new host.
+If the room host leaves, the human player who has been in the room the longest becomes the new host.
 
 ---
 

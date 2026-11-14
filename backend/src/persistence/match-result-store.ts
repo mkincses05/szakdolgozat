@@ -1,7 +1,7 @@
 // Stores the result of a match (docs/03 section 2): the statistics log in `matches` and
 // `match_players`, and the authoritative counters of registered users, in one transaction.
 
-import type { MatchEndReason, MatchStatus } from "@wildhand/shared";
+import type { BotLevel, MatchEndReason, MatchStatus } from "@wildhand/shared";
 import type { Pool } from "pg";
 
 export type PlayerKind = "guest" | "registered" | "bot";
@@ -11,6 +11,8 @@ export interface MatchRecordPlayer {
   kind: PlayerKind;
   /** The registered user's ID; `null` for guests and bots. */
   accountId: string | null;
+  /** Set for bots only. */
+  botLevel: BotLevel | null;
   displayName: string;
   finalStatus: MatchStatus;
   /** `null` only for players who were still playing when the match was aborted. */
@@ -61,12 +63,13 @@ export function createPgMatchResultStore(pool: Pool): MatchResultStore {
         );
         const matchId = rows[0].id;
 
-        const columns = 8;
+        const columns = 9;
         const values = record.players.flatMap((player) => [
           matchId,
           player.seat,
           player.kind,
           player.accountId,
+          player.botLevel,
           player.displayName,
           player.finalStatus,
           player.finishPosition,
@@ -77,7 +80,7 @@ export function createPgMatchResultStore(pool: Pool): MatchResultStore {
           .join(", ");
         await client.query(
           `INSERT INTO match_players
-             (match_id, seat, player_kind, user_id, display_name, final_status, finish_position, xp_earned)
+             (match_id, seat, player_kind, user_id, bot_level, display_name, final_status, finish_position, xp_earned)
            VALUES ${placeholders}`,
           values
         );

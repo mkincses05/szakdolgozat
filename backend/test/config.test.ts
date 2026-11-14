@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { DEFAULT_RECONNECT_GRACE_MS, DEFAULT_TURN_TIMEOUT_MS } from "@wildhand/shared";
 import { loadConfig } from "../src/config.js";
+import { DEFAULT_BOT_SETTINGS } from "../src/game/bot-driver.js";
 
 describe("loadConfig", () => {
   it("uses the defaults when nothing is set", () => {
@@ -10,7 +11,8 @@ describe("loadConfig", () => {
       secureCookies: false,
       turnTimeoutMs: DEFAULT_TURN_TIMEOUT_MS,
       reconnectGraceMs: DEFAULT_RECONNECT_GRACE_MS,
-      databaseUrl: null
+      databaseUrl: null,
+      bots: DEFAULT_BOT_SETTINGS
     });
   });
 
@@ -29,8 +31,18 @@ describe("loadConfig", () => {
       secureCookies: false,
       turnTimeoutMs: 30_000,
       reconnectGraceMs: 1,
-      databaseUrl: "postgres://wildhand_app:secret@localhost:5432/wildhand"
+      databaseUrl: "postgres://wildhand_app:secret@localhost:5432/wildhand",
+      bots: DEFAULT_BOT_SETTINGS
     });
+  });
+
+  it("reads the bot thinking times and keeps the maximum above the minimum", () => {
+    expect(
+      loadConfig({ BOT_THINK_MIN_MS: "0", BOT_THINK_MAX_MS: "0", BOT_SAMPLING_BUDGET_MS: "50" }).bots
+    ).toEqual({ thinkDelay: { minMs: 0, maxMs: 0 }, samplingBudgetMs: 50, samplingWorkers: DEFAULT_BOT_SETTINGS.samplingWorkers });
+    expect(loadConfig({ BOT_SAMPLING_WORKERS: "0" }).bots.samplingWorkers).toBe(0);
+    expect(loadConfig({ BOT_THINK_MIN_MS: "2000" }).bots.thinkDelay).toEqual({ minMs: 2000, maxMs: 2000 });
+    expect(() => loadConfig({ BOT_THINK_MIN_MS: "500", BOT_THINK_MAX_MS: "100" })).toThrow("BOT_THINK_MAX_MS");
   });
 
   it("requires an exact CORS origin and secure cookies in production", () => {

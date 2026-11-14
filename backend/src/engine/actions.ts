@@ -19,6 +19,7 @@ import { drawCards } from "./draw.js";
 import { hasLegalCard, isPlayable } from "./legality.js";
 import { shuffle, type Rng } from "./rng.js";
 import {
+  cloneState,
   findPlayer,
   validTargets,
   type EngineResult,
@@ -27,7 +28,7 @@ import {
   type PlayAction,
   type PrivateEvent
 } from "./state.js";
-import { completeTurn, endMatchIfOver } from "./turn.js";
+import { completeTurn, endMatch, endMatchIfOver } from "./turn.js";
 
 /** Plays one card or a number combo with all of its effects (R4–R14, R20). */
 export function applyPlay(state: MatchState, userId: string, action: PlayAction, rng: Rng): EngineResult {
@@ -36,7 +37,7 @@ export function applyPlay(state: MatchState, userId: string, action: PlayAction,
     return { ok: false, code: error };
   }
 
-  const next = structuredClone(state);
+  const next = cloneState(state);
   const player = findPlayer(next, userId)!;
   const effects: GameEffect[] = [];
   const privateEvents: PrivateEvent[] = [];
@@ -101,7 +102,7 @@ export function applyForfeit(state: MatchState, userId: string, rng: Rng): Engin
     return { ok: false, code: error };
   }
 
-  const next = structuredClone(state);
+  const next = cloneState(state);
   const player = findPlayer(next, userId)!;
   const effects: GameEffect[] = [];
 
@@ -122,6 +123,21 @@ export function applyForfeit(state: MatchState, userId: string, rng: Rng): Engin
 }
 
 /**
+ * R21: ends the match when no human player is left in it, only computer players. The remaining
+ * active players share the next position, as in a blocked game, and a pending +2 penalty is
+ * discarded. Whether a human is still present is decided by the room, not by the engine.
+ */
+export function applyEndWithoutHumans(state: MatchState): EngineResult {
+  if (state.phase !== "awaiting_action") {
+    return { ok: false, code: "match_not_running" };
+  }
+
+  const next = cloneState(state);
+  endMatch(next, "no_humans");
+  return commit(next, [], []);
+}
+
+/**
  * Updates connection presence. A player who disconnects keeps their own turn (R23); when no active
  * player was connected, the first active player to reconnect takes the turn.
  */
@@ -135,7 +151,7 @@ export function setPresence(state: MatchState, userId: string, presence: Presenc
     return { ok: true, state, effects: [], privateEvents: [] };
   }
 
-  const next = structuredClone(state);
+  const next = cloneState(state);
   const updated = findPlayer(next, userId)!;
   updated.presence = presence;
 
@@ -174,7 +190,7 @@ function resolveTurnWithoutPlay(state: MatchState, userId: string, rng: Rng, tim
     return { ok: false, code: "hand_limit_reached" };
   }
 
-  const next = structuredClone(state);
+  const next = cloneState(state);
   const player = findPlayer(next, userId)!;
   const effects: GameEffect[] = [];
 

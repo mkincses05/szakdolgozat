@@ -18,7 +18,8 @@ The runtime model is the authoritative in-memory state of the server.
 
 - `id`, `code`
 - `hostUserId`
-- `members`: user IDs in join order, used for host transfer (R24)
+- `members`: user IDs in join order, used for host transfer (R24) and as the seat order; bots are members too
+- `bots`: the computer players added by the host, with their generated ID, display name (`Bot 1`, `Bot 2`, ...), and level
 - `state`: `lobby`, `in_match`, or `closed`
 - `minPlayers` (2), `maxPlayers` (8)
 
@@ -39,7 +40,7 @@ The runtime model is the authoritative in-memory state of the server.
 - `seed`: seed of the random number generator, kept by the match controller
 - `finishingOrder`
 - `forfeitOrder`: forfeited players in forfeit order, for the ranking in R23
-- `endReason`: `last_player`, `blocked`, or `forfeits` once the match has ended
+- `endReason`: `last_player`, `blocked`, `forfeits`, or `no_humans` once the match has ended
 - `startedAt`, `endedAt`
 
 #### MatchPlayer
@@ -49,7 +50,7 @@ The runtime model is the authoritative in-memory state of the server.
 - `matchStatus`: `active`, `finished`, or `forfeited`
 - `presence`: `connected`, `disconnected`, or `left`
 - `finishPosition`
-- `isBot`
+- `isBot`, `botLevel`: `random`, `rule_based`, `heuristic`, or `sampling` for bots, empty for humans
 
 The hand limit (20) and the reshuffle threshold (25) are rule constants, not stored per match.
 
@@ -72,7 +73,7 @@ PostgreSQL stores registered user accounts and a statistics log of finished matc
 | `users` | Registered users: ID (UUID), username and email (both required, unique case-insensitively), display name, `xp`, `matches_played`, `wins`, `forfeits`, creation time, last-seen time |
 | `user_credentials` | User ID, argon2id password hash, update time |
 | `auth_sessions` | ID, user ID, SHA-256 hash of the login token, creation, last-use, and expiry time |
-| `matches` | Match ID, seed, player count (2–8), turn time limit, start and end time, end reason (`last_player`, `blocked`, `forfeits`, or `aborted`), winner seat (empty when there is no winner) |
+| `matches` | Match ID, seed, player count (2–8), turn time limit, start and end time, end reason (`last_player`, `blocked`, `forfeits`, `no_humans`, or `aborted`), winner seat (empty when there is no winner) |
 | `match_players` | Match ID, seat, player kind (`guest`, `registered`, or `bot`), user ID (registered players only), bot level (bots only), display name at match time, final status, finish position (empty only for unranked players of an aborted match), XP earned |
 | `schema_migrations` | Applied migration versions with their application time |
 
@@ -90,7 +91,7 @@ When a match ends, the server writes the `matches` row, every `match_players` ro
 
 ### Experience points
 
-A registered player earns 10 XP for a match plus 10 XP for every player who finished behind them; a forfeit earns nothing. Players who share a position after a blocked game (R18) are not behind each other. For example, in a 4-player match the positions 1 to 4 earn 40, 30, 20, and 10 XP. Guests, bots, and aborted matches earn no XP. The rule is `getMatchXp` in `shared/`.
+A registered player earns 10 XP for a match plus 10 XP for every player who finished behind them; a forfeit earns nothing. Players who share a position after a blocked game (R18) are not behind each other. For example, in a 4-player match the positions 1 to 4 earn 40, 30, 20, and 10 XP. Guests, bots, and aborted matches earn no XP. Bots count like any other player for the positions, so a registered player also earns XP for every bot that finished behind them. The rule is `getMatchXp` in `shared/`.
 
 ### Authentication
 
@@ -125,20 +126,69 @@ Email verification, password reset with email delivery, and protection against X
 
 ## 3. Intelligent Player Approach
 
-The intelligent player is a modular decision component that plays through the same action interface as a human player.
+The intelligent player is a modular decision component that plays through the same action interface as a human player. The host adds bots in the lobby and chooses one of four levels per bot; bots take seats like human members and count towards the 2–8 player limit (R1). The code is in `backend/src/bots/`, the live-match integration in `backend/src/game/bot-driver.ts`.
 
 ### Information rules
 
 The bot only uses information that a human player in the same seat would have: its own hand, the public state, the public effect history, the results of its own Spy cards, and the cards it gave and received in Swaps it took part in. It never reads other players' hands from the server state.
 
+The rule is enforced by the structure, not only by convention. A bot has no socket: the match controller hands every message addressed to a bot to its driver, so the bot receives exactly the messages a human client in its seat would receive. From them the bot builds its memory (`BotMemory`):
+
+- the discard pile since the last recycling, from the played cards of the public effects (R19);
+- the number of decks in play, from the reshuffle effects;
+- the cards known to be in other hands: a Spy snapshot of the whole hand, and the card given away in an own Swap. A known card is forgotten when its holder plays it, and all knowledge of two other players is dropped after a blind Swap between them;
+- the forfeit order;
+- inferences from draws (`HandConstraint`): a player who drew a card or passed could not play on the table they saw, and a player who drew a +2 penalty held no +2. An inference covers the cards held at that moment and weakens with every card the player plays or gives away, because each of them may have been one of those cards; a Spy snapshot replaces it. The inference assumes that a player draws only when they must, so a voluntary draw makes it wrong; this only makes the bot's estimates less accurate, never its actions illegal.
+
+The cards the bot has not seen are every card of the decks in play except its own hand and the discard pile. They are in other hands, in the draw pile, or in removed forfeited hands.
+
+### Legal actions
+
+All levels choose from the same list, `getLegalActions` in `shared/`, which is built from the bot's own view with the shared rule helpers (`getLegalCards`, `getComboPartners`, `getSwapOffers`, `getValidTargets`, `getDrawOption`). The actions are canonical:
+
+- Plays that differ only in interchangeable copies of a card are listed once.
+- A number combo is described by the number of cards of each color and the color of its last card, which becomes the top card (R8); the order of the middle cards does not matter.
+- Color Change is listed once per color, Spy once per target, and Swap once per target and distinct card given away.
+- The blind Swap position is not part of an action: it carries no information (R12), so it is chosen at random when the action is sent.
+- Drawing (or passing, or drawing the penalty) is one action whenever `game:draw` is allowed.
+
+A test plays seeded random matches with 2–8 players and checks at every turn that the engine accepts every listed action, that every legal card starts at least one action, and that the draw action is listed exactly when drawing is allowed.
+
 ### Bot levels
 
-1. **Random bot**: chooses uniformly from the legal actions. Used as a baseline.
-2. **Rule-based bot**: fixed priorities, for example to play combos first, keep +2 cards to answer a penalty, give away its least useful card with Swap, and use Color Change on the color it holds most.
-3. **Heuristic bot**: scores each legal action by hand-size reduction, color continuity, the penalty situation, the opponents' hand sizes, and information gained from Spy.
-4. **Optional – sampling bot**: samples possible hidden hands consistent with the known information, simulates the outcomes with the engine, and chooses the best average action (determinized Monte Carlo search).
+1. **Random bot**: chooses uniformly from the canonical legal actions. Used as a baseline. Because drawing is always one of the actions, it often draws although it could play.
+2. **Rule-based bot**: a plain list of fixed priorities, first match wins (`chooseBySimpleRules`):
+   1. a +2 penalty is answered with a +2 (chain), otherwise the penalty is drawn;
+   2. the first playable number card, alone: this level never plays combos;
+   3. Swap, Color Change (to the color the bot holds most), Spy, Storm, then a +2, which is kept until now to answer a penalty, each with the first target and the first card to give away;
+   4. drawing only when nothing can be played.
 
-Learning during runtime is outside the current scope.
+   An earlier, fuller rule list (`chooseByRules`) also chose the longest combo and attacked opponents close to finishing, but it was nearly as strong as the heuristic bot (`docs/05`, entry 13). It is now only the playout policy of the sampling bot:
+   1. a +2 penalty is answered with a +2 (chain), otherwise the penalty is drawn;
+   2. when the next player has 2 cards or fewer, a +2 or Storm is played on them;
+   3. the longest number combo, ending on the color the bot holds most;
+   4. Swap, giving away the least useful card to the opponent with the fewest cards;
+   5. Color Change to the color the bot holds most;
+   6. Spy on the opponent with the fewest cards;
+   7. Storm, then a +2;
+   8. drawing only when nothing can be played.
+3. **Heuristic bot**: scores each legal action with a weighted evaluation of the situation after it and plays the best one. The features are the number of turns still needed to empty the hand (one per group of number cards with the same number and one per special card, because one turn plays a whole combo or one special card), the change of the hand size, the share of the remaining hand that could follow the new top card, the number of +2 and wild cards kept in reserve, the pressure of an attack on opponents close to finishing, the usefulness of the card given away with Swap, the value of Spy information about an opponent whose hand is not known yet, and the chance of blocking the next player. The blocking chance is the probability that the next player cannot follow the new top card, estimated from the unseen cards, their known cards, and their inferences; it is multiplied by the cards they would have to draw and by how close they are to finishing. The weights (`DEFAULT_HEURISTIC_WEIGHTS`) were tuned with the simulator (section 4); the measurements are in `docs/05-bot-measurement-log.md`. The level-3 bot plays with these weights but without blocking (`LEVEL_3_WEIGHTS`): it weighs its own hand and does not use the inferences about the opponents' hands, which remain the advantage of level 4. With blocking, level 3 was much closer to level 4 than to level 2; without it, the two upper steps are about equal (`docs/05`, entry 18). The full weights, with blocking, are still used by the sampling bot to pre-select its candidates.
+4. **Sampling bot**: determinized flat Monte Carlo search, also called Perfect Information Monte Carlo (PIMC). One iteration:
+   1. draws one complete state consistent with the bot's knowledge (a determinization): its own hand, the known cards of other players, every hand size, and the draw-pile size are kept; the unseen cards are dealt randomly to the other hands, the draw pile, and the removed hands, and a hand with inferences gets cards that fit them whenever such cards are left;
+   2. applies every candidate action to that same state and plays the game forward with the fuller rule list (`chooseByRules`) for every player (40 actions by default);
+   3. scores the outcome for the bot between 1 (first place) and 0 (last place); a player who has not finished is ranked among the active players by the number of turns they still need to empty their hand, which predicted the finishing order better than the hand size.
+
+   All candidates of an iteration share the same determinization and the same random seed (common random numbers), so they are compared under equal conditions. When there are more than 8 legal actions, the heuristic bot's best 8 are the candidates. Iterations run until the time budget (`BOT_SAMPLING_BUDGET_MS`, 400 ms by default) is used up, and at most 1000 times; the action with the best average wins. For measurements, `maxPlayouts` limits the search by the number of playouts instead of by time, so the result does not depend on the machine's load. Dropping weak candidates early (successive halving) was tried and did not improve the bot, so it was removed (`docs/05`, entry 14).
+
+   Known limitation: every determinization is played as if the hidden cards were visible ("strategy fusion"), so the bot never plays to gather information on purpose. An Information Set Monte Carlo Tree Search (ISMCTS), which builds one search tree over the bot's information set and also searches the opponents' replies, was implemented and measured: it was weaker than the flat search, most likely because the flat search compares the candidates on the same determinizations (`docs/05`, entry 19). It was removed afterwards.
+
+Every bot has its own random number generator, seeded from the match seed and its seat. It never uses the match's generator, so a match stays reproducible from its seed and its actions. Learning during runtime is outside the current scope.
+
+### Live matches
+
+The driver of a bot waits a short thinking time when the bot is on turn (0.7–1.4 s by default), so human players can follow the moves, then decides on the latest view and sends the decision through the same match actions as a human. A decision made for an older state version is dropped. The turn timer applies to bots too. The room service handles every room on one thread, so the sampling bot's search runs in a pool of worker threads (`BOT_SAMPLING_WORKERS`, 2 by default; `backend/src/bots/sampling-pool.ts`). The worker gets a plain copy of the bot's view and memory and a seed drawn from the bot's own generator, so it still uses only what the bot knows. While a worker searches, the server thread stays free: a 400 ms decision held up the server thread for about 0.4 s without workers and for at most about 20 ms with them. With 0 workers the search runs on the server thread. Tests and the simulator always search on the calling thread, so their results stay reproducible.
+
+When no human is left in the room, a running match ends with the end reason `no_humans` and is stored, and the room closes (R21). Bots never become the host (R24) and are always connected. In the results they are stored with the player kind `bot` and their level.
 
 ### Decision points
 
@@ -168,6 +218,9 @@ The bots are evaluated with a headless simulator that runs complete matches with
 - Compare every bot level with the random and the rule-based baselines.
 - Rotate seats so that the starting seat does not bias the results.
 - Record results per match and per action.
+- Log every measurement during development in `docs/05-bot-measurement-log.md`, so the development of the bots can be followed.
+
+The tournament is `backend/tools/simulate/tournament.ts`; `backend/tools/simulate/tune.ts` tunes the heuristic bot's weights.
 
 ## 5. Data Needed for Evaluation
 

@@ -195,6 +195,7 @@ describe.skipIf(!testDatabaseUrl)("PostgreSQL", () => {
       seat,
       kind: "guest",
       accountId: null,
+      botLevel: null,
       displayName: `Player ${seat + 1}`,
       finalStatus: "finished",
       finishPosition: seat + 1,
@@ -248,6 +249,31 @@ describe.skipIf(!testDatabaseUrl)("PostgreSQL", () => {
 
       expect(await counters(first)).toEqual({ xp: 20, matches_played: 1, wins: 0, forfeits: 0 });
       expect(await counters(second)).toEqual({ xp: 20, matches_played: 1, wins: 0, forfeits: 0 });
+    });
+
+    it("stores bots with their level and a match ended without humans", async () => {
+      const userId = await createUser("Bot_Beater");
+
+      await store.save(
+        record({ endReason: "no_humans", winnerSeat: 0 }, [
+          player(0, { kind: "registered", accountId: userId, xpEarned: 20 }),
+          player(1, { kind: "bot", botLevel: "heuristic", displayName: "Bot 1", finishPosition: 2 }),
+          player(2, { kind: "bot", botLevel: "sampling", displayName: "Bot 2", finishPosition: 2 })
+        ])
+      );
+
+      const { rows: matches } = await client.query("SELECT end_reason FROM matches ORDER BY id DESC LIMIT 1");
+      expect(matches).toEqual([{ end_reason: "no_humans" }]);
+
+      const { rows } = await client.query(
+        "SELECT player_kind, bot_level FROM match_players WHERE match_id = (SELECT max(id) FROM matches) ORDER BY seat"
+      );
+      expect(rows).toEqual([
+        { player_kind: "registered", bot_level: null },
+        { player_kind: "bot", bot_level: "heuristic" },
+        { player_kind: "bot", bot_level: "sampling" }
+      ]);
+      expect(await counters(userId)).toEqual({ xp: 20, matches_played: 1, wins: 1, forfeits: 0 });
     });
 
     it("logs an aborted match without positions and changes no counter", async () => {

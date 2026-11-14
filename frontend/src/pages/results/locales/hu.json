@@ -4,7 +4,8 @@
   "endReason": {
     "last_player": "A meccs véget ért, mert csak egy aktív játékos maradt.",
     "blocked": "A meccs véget ért, mert minden megmaradt játékosnál 20 lap volt, és senki nem tudott lapot kijátszani. Ők közösen kapják a következő helyezést.",
-    "forfeits": "A meccs véget ért, mert játékosok feladták."
+    "forfeits": "A meccs véget ért, mert játékosok feladták.",
+    "no_humans": "A meccs véget ért, mert nem maradt emberi játékos. A megmaradt botok holtversenyben kapják a következő helyezést."
   },
   "standings": "Végeredmény",
   "place": "{{position}}. {{name}}",

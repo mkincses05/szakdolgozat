@@ -8,15 +8,15 @@ Room state, match state, and player status are kept separate.
 
 ### Room states
 
-- `lobby`: members join and leave; the host can start a match.
+- `lobby`: members join and leave; the host can add and remove bots and start a match.
 - `in_match`: a match is running in the room.
-- `closed`: the last member has left; the room is removed.
+- `closed`: the last human member has left; the room and its bots are removed.
 
 Transitions:
 
 - `lobby -> in_match` when the host starts a match with 2–8 members (R1).
 - `in_match -> lobby` after the match has ended, so the host can start a new match.
-- `lobby -> closed` and `in_match -> closed` when the last member leaves.
+- `lobby -> closed` and `in_match -> closed` when the last human member leaves. A running match is then ended with the end reason `no_humans` and stored before the room closes (R21).
 
 ### Match phases
 
@@ -52,7 +52,9 @@ Each client action carries an `actionId` (a client-generated UUID); gameplay act
 | `room:create` | `displayName` | Creates a room; the creator is the host. Rejected with `already_in_room` when the connection already has a session. |
 | `room:join` | `roomCode`, `displayName` | Rejected when the room is full (R1), in a match, or the connection already has a session (`already_in_room`). |
 | `room:leave` | — | Triggers host transfer (R24) or a forfeit (R23). |
-| `room:start` | — | Host only; requires 2–8 members. |
+| `room:start` | — | Host only; requires 2–8 members, bots included. |
+| `room:addBot` | `level` | Host only, in the lobby. Adds a bot of the level `random`, `rule_based`, `heuristic`, or `sampling`; rejected with `room_full` at 8 members (R1). |
+| `room:removeBot` | `botId` | Host only, in the lobby. Rejected with `bot_not_found` when the bot is not in the room. |
 | `game:play` | `cardIds[]`, `chosenColor?`, `targetPlayerId?`, `swapCardId?`, `targetCardPosition?` | One special card or a number combo (R8, R9). For Swap, `swapCardId` is the acting player's card and `targetCardPosition` is the blindly picked face-down position (R12). |
 | `game:draw` | — | Voluntary or forced draw (R15), pass (R17), or drawing a +2 penalty (R10). |
 | `session:resume` | `reconnectToken` | Reconnects a player within the grace period. Resuming the same session again is allowed; a connection that already has another session is rejected with `already_in_room`. |
@@ -61,7 +63,7 @@ Each client action carries an `actionId` (a client-generated UUID); gameplay act
 
 | Event | Recipient | Content |
 | --- | --- | --- |
-| `room:state` | Room members | Members, host, room state. |
+| `room:state` | Human room members | Members (bots marked with `isBot` and their level), host, room state. |
 | `game:state` | Each player separately | Personal view (see section 3) and `stateVersion`. |
 | `game:effect` | All players | Public effect summary, for example the Storm value with requested and actual draws per player, the hand-limit cap, a reshuffle, or a new deck added. |
 | `game:spyReveal` | Spy player only | Snapshot of the target's hand (R14). |
@@ -84,6 +86,7 @@ After every accepted action the server sends the `game:effect` events first, the
 - Spy snapshots are sent only to the Spy player.
 - During a Swap, the acting player sees the target's hand only as face-down positions. The server maps `targetCardPosition` to a card through a fresh random permutation at resolution time, so the hand order never leaks information. Only the two participants learn which cards were exchanged.
 - Private data is never broadcast to a room; personal views are sent to individual sockets.
+- Bots follow the same rules. A bot has no socket: the match controller hands its messages to the bot's driver instead, so a bot receives exactly what a human in its seat would receive (its own view, the public effects, and its own Spy and Swap results) and never reads the authoritative state. See docs/03 section 3.
 
 ## 4. Timers
 
@@ -93,6 +96,8 @@ All values are configurable; the defaults are:
 | --- | ---: | --- |
 | Turn timer | 30 s | Draw the pending +2 penalty, otherwise draw one card or pass (R22). |
 | Reconnect grace period | 60 s | In a running match, an active player forfeits (R23). In the lobby, and for finished players, the member leaves the room. The token can no longer be used (`session_expired`). |
+
+Bots act after a short thinking time (0.7–1.4 s by default, `BOT_THINK_MIN_MS` and `BOT_THINK_MAX_MS`), so humans can follow their moves. A bot's decision goes through the same match actions as a human's and is dropped if the state version has changed in the meantime. The turn timer applies to bots as well.
 
 Timer expiry is processed as a server-generated action with the same validation, versioning, and sequential processing as client actions; it is equivalent to a `game:draw` from the current player, except that a player with 20 cards passes even if they hold a legal card (R22). When a disconnected player faces a pending +2 penalty, the server draws it for them in the same way (R10).
 

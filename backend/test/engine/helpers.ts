@@ -72,7 +72,8 @@ export function buildState(options: StateOptions): MatchState {
       matchStatus: "active",
       presence: options.presence?.[seat] ?? "connected",
       finishPosition: null,
-      isBot: false
+      isBot: false,
+      botLevel: null
     })),
     currentPlayerId: `p${options.current ?? 0}`,
     drawPile: options.drawPile ?? createDeck(1),

@@ -24,6 +24,7 @@ export const ERROR_CODES = [
   "not_host",
   "not_enough_players",
   "too_many_players",
+  "bot_not_found",
 
   "match_not_running",
   "not_in_match",

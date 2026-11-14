@@ -14,8 +14,8 @@ function roomView(hostUserId: string): RoomView {
     state: "lobby",
     hostUserId,
     members: [
-      { userId: "u2", displayName: "Bela", presence: "disconnected" },
-      { userId: "u1", displayName: "Anna", presence: "connected" }
+      { userId: "u2", displayName: "Bela", presence: "disconnected", isBot: false, botLevel: null },
+      { userId: "u1", displayName: "Anna", presence: "connected", isBot: false, botLevel: null }
     ],
     minPlayers: 2,
     maxPlayers: 8
@@ -61,6 +61,40 @@ describe("LobbyPage", () => {
 
     expect(fakeSocket.emitWithAck).toHaveBeenLastCalledWith("room:start", expect.objectContaining({ actionId: expect.any(String) }));
     expect(await screen.findByRole("alert")).toHaveTextContent("There are not enough players to start the match.");
+  });
+
+  it("lets only the host add and remove bots, and shows their level", async () => {
+    const withBot = (hostUserId: string): RoomView => ({
+      ...roomView(hostUserId),
+      members: [
+        ...roomView(hostUserId).members,
+        { userId: "bot-1", displayName: "Bot 1", presence: "connected", isBot: true, botLevel: "sampling" }
+      ]
+    });
+
+    await renderLobby(withBot("u2"));
+    expect(screen.getByText("Bot 1 (bot, sampling) – connected")).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Add bot" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Remove Bot 1" })).not.toBeInTheDocument();
+
+    act(() => fakeSocket.receive("room:state", withBot("u1")));
+    fireEvent.change(screen.getByRole("combobox", { name: "Strength" }), { target: { value: "rule_based" } });
+    expect(screen.getByText("Follows fixed priorities, for example answers a +2 with a +2.")).toBeInTheDocument();
+
+    fakeSocket.emitWithAck.mockResolvedValueOnce({ ok: false, code: "room_full" });
+    fireEvent.click(screen.getByRole("button", { name: "Add bot" }));
+    expect(fakeSocket.emitWithAck).toHaveBeenLastCalledWith(
+      "room:addBot",
+      expect.objectContaining({ level: "rule_based", actionId: expect.any(String) })
+    );
+    expect(await screen.findByRole("alert")).toHaveTextContent("The room is full.");
+
+    fakeSocket.emitWithAck.mockResolvedValueOnce({ ok: true });
+    fireEvent.click(screen.getByRole("button", { name: "Remove Bot 1" }));
+    expect(fakeSocket.emitWithAck).toHaveBeenLastCalledWith(
+      "room:removeBot",
+      expect.objectContaining({ botId: "bot-1", actionId: expect.any(String) })
+    );
   });
 
   it("returns to the landing page after leaving", async () => {

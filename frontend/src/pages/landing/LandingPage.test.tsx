@@ -42,7 +42,7 @@ describe("LandingPage", () => {
       code: "ABC123",
       state: "lobby",
       hostUserId: "u1",
-      members: [{ userId: "u1", displayName: "Anna", presence: "connected" }],
+      members: [{ userId: "u1", displayName: "Anna", presence: "connected", isBot: false, botLevel: null }],
       minPlayers: 2,
       maxPlayers: 8
     };

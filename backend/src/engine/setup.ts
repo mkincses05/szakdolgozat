@@ -6,6 +6,7 @@ import {
   STARTING_HAND_SIZE,
   createDeck,
   isNumberCard,
+  type BotLevel,
   type ErrorCode
 } from "@wildhand/shared";
 import { shuffle, type Rng } from "./rng.js";
@@ -17,12 +18,14 @@ export interface MatchSetup {
   userIds: string[];
   /** Members who are within their reconnect grace period when the match starts (R23). */
   disconnectedUserIds?: readonly string[];
+  /** Computer players and their levels (docs/03 section 3). */
+  botLevels?: Readonly<Record<string, BotLevel>>;
 }
 
 export type CreateMatchResult = { ok: true; state: MatchState } | { ok: false; code: ErrorCode };
 
 export function createMatch(setup: MatchSetup, rng: Rng): CreateMatchResult {
-  const { matchId, userIds, disconnectedUserIds = [] } = setup;
+  const { matchId, userIds, disconnectedUserIds = [], botLevels = {} } = setup;
 
   if (userIds.length < MIN_PLAYERS) {
     return { ok: false, code: "not_enough_players" };
@@ -44,7 +47,8 @@ export function createMatch(setup: MatchSetup, rng: Rng): CreateMatchResult {
     matchStatus: "active",
     presence: disconnectedUserIds.includes(userId) ? "disconnected" : "connected",
     finishPosition: null,
-    isBot: false
+    isBot: Object.hasOwn(botLevels, userId),
+    botLevel: Object.hasOwn(botLevels, userId) ? botLevels[userId] : null
   }));
 
   for (let round = 0; round < STARTING_HAND_SIZE; round++) {

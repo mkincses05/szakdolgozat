@@ -39,6 +39,15 @@
     "disconnected": "Verbindung getrennt",
     "left": "hat den Raum verlassen"
   },
+  "bots": {
+    "tag": "Bot, {{level}}",
+    "levels": {
+      "random": "zufällig",
+      "rule_based": "regelbasiert",
+      "heuristic": "heuristisch",
+      "sampling": "stichprobenbasiert"
+    }
+  },
   "errors": {
     "invalid_payload": "Die Anfrage war ungültig.",
     "stale_state": "Das Spiel hat sich inzwischen geändert. Bitte versuche es erneut.",
@@ -59,6 +68,7 @@
     "not_host": "Das kann nur der Gastgeber tun.",
     "not_enough_players": "Es sind nicht genug Spieler für den Start des Spiels da.",
     "too_many_players": "Im Raum sind zu viele Spieler.",
+    "bot_not_found": "Dieser Bot ist nicht mehr im Raum.",
     "match_not_running": "Es läuft kein Spiel.",
     "not_in_match": "Du spielst in diesem Spiel nicht mit.",
     "player_not_active": "Du bist in diesem Spiel kein aktiver Spieler mehr.",

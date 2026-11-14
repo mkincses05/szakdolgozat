@@ -3,6 +3,7 @@ import { ErrorMessage } from "../../components/ErrorMessage";
 import { useLeaveRoom } from "../../hooks/useLeaveRoom";
 import { useServerState } from "../../hooks/useServerState";
 import { StandingsList } from "./components/StandingsList";
+import { useBotLevels } from "./hooks/useBotLevels";
 import { usePlayerNames } from "./hooks/usePlayerNames";
 
 export function ResultsPage() {
@@ -10,6 +11,7 @@ export function ResultsPage() {
   const { results, session, dismissResults } = useServerState();
   const leave = useLeaveRoom();
   const nameOf = usePlayerNames(results?.matchId ?? "");
+  const botLevelOf = useBotLevels(results?.matchId ?? "");
 
   if (!results || !session) {
     return null;
@@ -21,7 +23,7 @@ export function ResultsPage() {
       <p>{t("winner", { name: nameOf(results.winnerId) })}</p>
       <p>{t(`endReason.${results.endReason}`)}</p>
 
-      <StandingsList standings={results.standings} userId={session.userId} nameOf={nameOf} />
+      <StandingsList standings={results.standings} userId={session.userId} nameOf={nameOf} botLevelOf={botLevelOf} />
 
       <button type="button" className="border px-2 py-1" onClick={dismissResults}>
         {t("backToLobby")}

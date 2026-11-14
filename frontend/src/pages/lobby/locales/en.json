@@ -8,5 +8,17 @@
   "host": "host",
   "start": "Start match",
   "waitingForHost": "Waiting for the host to start the match.",
-  "leave": "Leave room"
+  "leave": "Leave room",
+  "bots": {
+    "title": "Computer players",
+    "level": "Strength",
+    "add": "Add bot",
+    "remove": "Remove {{name}}",
+    "descriptions": {
+      "random": "Plays a random legal move. The weakest opponent.",
+      "rule_based": "Follows fixed priorities, for example answers a +2 with a +2.",
+      "heuristic": "Weighs every move, for example keeps wild cards for later.",
+      "sampling": "Imagines the hidden cards many times and simulates the game ahead."
+    }
+  }
 }

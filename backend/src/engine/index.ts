@@ -1,11 +1,19 @@
 // Pure game engine: no Socket.IO, timers, or database (docs/04).
 
-export { applyDraw, applyForfeit, applyPlay, applyTimeout, setPresence } from "./actions.js";
+export {
+  applyDraw,
+  applyEndWithoutHumans,
+  applyForfeit,
+  applyPlay,
+  applyTimeout,
+  setPresence
+} from "./actions.js";
 export { hasLegalCard, isLegalCard, isPlayable } from "./legality.js";
 export { createSeededRng, shuffle, type Rng } from "./rng.js";
 export { createMatch, type CreateMatchResult, type MatchSetup } from "./setup.js";
 export {
   activePlayers,
+  cloneState,
   findPlayer,
   topCard,
   validTargets,

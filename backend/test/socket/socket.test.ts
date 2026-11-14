@@ -1,3 +1,4 @@
+import { DEFAULT_BOT_SETTINGS } from "../../src/game/bot-driver.js";
 import { randomUUID } from "node:crypto";
 import type { AddressInfo } from "node:net";
 import { afterEach, describe, expect, it } from "vitest";
@@ -60,7 +61,7 @@ const clients: TestClient[] = [];
 
 async function startServer(reconnectGraceMs = 5_000): Promise<string> {
   app = createWildhandServer(
-    { port: 0, corsOrigin: "http://localhost:5173", secureCookies: false, turnTimeoutMs: 60_000, reconnectGraceMs, databaseUrl: null },
+    { port: 0, corsOrigin: "http://localhost:5173", secureCookies: false, turnTimeoutMs: 60_000, reconnectGraceMs, databaseUrl: null, bots: DEFAULT_BOT_SETTINGS },
     { logger: silentLogger }
   );
   await new Promise<void>((resolve) => app!.httpServer.listen(0, resolve));

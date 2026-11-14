@@ -5,6 +5,7 @@ import { Server } from "socket.io";
 import type { AccountStore } from "./auth/account-store.js";
 import { AuthService } from "./auth/auth-service.js";
 import type { ServerConfig } from "./config.js";
+import { SamplingWorkerPool } from "./bots/sampling-pool.js";
 import { RoomService, type RandomSource } from "./game/room-service.js";
 import { createAuthRouter } from "./http/auth-routes.js";
 import { consoleLogger, type Logger } from "./logger.js";
@@ -57,6 +58,8 @@ export function createWildhandServer(config: ServerConfig, dependencies: ServerD
   const httpServer = createServer(app);
   const io: WildhandServer = new Server(httpServer, { cors: corsOptions });
   const transport = new SocketTransport();
+  const samplingPool =
+    config.bots.samplingWorkers > 0 ? new SamplingWorkerPool(config.bots.samplingWorkers, logger) : undefined;
   const roomService = new RoomService({
     transport,
     scheduler,
@@ -64,7 +67,9 @@ export function createWildhandServer(config: ServerConfig, dependencies: ServerD
     random: dependencies.random,
     results: dependencies.results,
     turnTimeoutMs: config.turnTimeoutMs,
-    reconnectGraceMs: config.reconnectGraceMs
+    reconnectGraceMs: config.reconnectGraceMs,
+    bots: config.bots,
+    samplingPool
   });
 
   registerHandlers(io, roomService, transport, logger, auth);
@@ -78,7 +83,7 @@ export function createWildhandServer(config: ServerConfig, dependencies: ServerD
       new Promise((resolve) => {
         io.close(() => {
           roomService.dispose();
-          void roomService.flushResults().then(resolve);
+          void Promise.all([roomService.flushResults(), samplingPool?.terminate()]).then(() => resolve());
         });
       })
   };

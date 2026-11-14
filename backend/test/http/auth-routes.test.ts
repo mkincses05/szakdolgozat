@@ -1,5 +1,6 @@
 // The account API over HTTP and the login cookie on a Socket.IO connection, without a database.
 
+import { DEFAULT_BOT_SETTINGS } from "../../src/game/bot-driver.js";
 import { randomUUID } from "node:crypto";
 import type { AddressInfo } from "node:net";
 import { afterEach, describe, expect, it } from "vitest";
@@ -22,7 +23,7 @@ afterEach(async () => {
 
 async function start(accounts: AccountStore | null = new MemoryAccountStore()): Promise<string> {
   app = createWildhandServer(
-    { port: 0, corsOrigin: ORIGIN, secureCookies: false, turnTimeoutMs: 60_000, reconnectGraceMs: 5_000, databaseUrl: null },
+    { port: 0, corsOrigin: ORIGIN, secureCookies: false, turnTimeoutMs: 60_000, reconnectGraceMs: 5_000, databaseUrl: null, bots: DEFAULT_BOT_SETTINGS },
     { logger: silentLogger, accounts }
   );
   await new Promise<void>((resolve) => app!.httpServer.listen(0, resolve));
