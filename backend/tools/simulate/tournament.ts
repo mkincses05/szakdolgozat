@@ -176,7 +176,8 @@ function main(): void {
     const winRate = levelStats.seats === 0 ? 0 : levelStats.wins / levelStats.seats;
     const [low, high] = wilson(levelStats.wins, levelStats.seats);
     const decisionAverage = mean(levelStats.decisionMs);
-    const decisionMax = Math.max(0, ...levelStats.decisionMs);
+    // A loop, not Math.max(...values): a long run has hundreds of thousands of decisions.
+    const decisionMax = levelStats.decisionMs.reduce((max, value) => Math.max(max, value), 0);
 
     console.log(
       row([
