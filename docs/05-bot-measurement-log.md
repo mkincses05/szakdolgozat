@@ -373,22 +373,68 @@ Rejected actions: 0.
 
 **Interpretation:** ISMCTS is weaker than the flat search here, by about 0.04–0.05, at the edge of significance. The most likely reason is the variance: the flat search compares every candidate on the same determinization with the same random seed, so its comparisons are paired, while ISMCTS evaluates one branch per iteration on a new determinization. With about a thousand iterations and many legal actions per turn, the tree also stays shallow, so searching the opponents' replies does not pay off. In a game with this much luck, the paired comparison of the flat search is worth more than the deeper search. The flat search stays, and the ISMCTS code was removed afterwards, because it is not used; this entry describes it.
 
+## 20. 2026-11-14 – Large measurement: every level against every lower level, 2, 4, and 8 players
+
+**Code version:** commit `cfddd2a` (all levels as after entry 18 and the removal of ISMCTS).
+**Setup:** one bot of the stronger level against `n − 1` bots of a lower level, for every pair of levels and for 2, 4, and 8 players; seats rotate from match to match. 1000 matches per row, 500 for the rows with the sampling bot (in parts of 100 matches). The sampling bot used 1380 playouts per decision (about 250 ms with the current code), so the result does not depend on the load; the 54 runs ran 11 at a time. Every run has its own seeds (`100000 + 1000 × run number`). 13,500 matches in all.
+**Command, for example:** `tournament.ts --levels sampling,heuristic,heuristic,heuristic --games 100 --seed 132000 --max-playouts 1380 --out run.json`
+
+The average position is that of the stronger bot (0 = always first, 1 = always last, 0.5 = equal strength). The last column but one is the win rate the bot would have at equal strength (1 / number of players).
+
+| Players | Level | Opponents | Matches | Average position | Win rate (95% CI) | Equal strength would win |
+| ---: | --- | --- | ---: | --- | --- | --- |
+| 2 | rule-based | 1 × random | 1000 | 0.108 ± 0.019 | 89.2% (87.1–91.0%) | 50.0% |
+| 2 | heuristic | 1 × random | 1000 | 0.059 ± 0.015 | 94.1% (92.5–95.4%) | 50.0% |
+| 2 | heuristic | 1 × rule-based | 1000 | 0.341 ± 0.029 | 65.9% (62.9–68.8%) | 50.0% |
+| 2 | sampling | 1 × random | 500 | 0.022 ± 0.013 | 97.8% (96.1–98.8%) | 50.0% |
+| 2 | sampling | 1 × rule-based | 500 | 0.184 ± 0.034 | 81.6% (78.0–84.8%) | 50.0% |
+| 2 | sampling | 1 × heuristic | 500 | 0.322 ± 0.041 | 67.8% (63.6–71.7%) | 50.0% |
+| 4 | rule-based | 3 × random | 1000 | 0.089 ± 0.011 | 77.6% (74.9–80.1%) | 25.0% |
+| 4 | heuristic | 3 × random | 1000 | 0.058 ± 0.009 | 84.7% (82.3–86.8%) | 25.0% |
+| 4 | heuristic | 3 × rule-based | 1000 | 0.358 ± 0.021 | 38.7% (35.7–41.8%) | 25.0% |
+| 4 | sampling | 3 × random | 500 | 0.039 ± 0.011 | 89.8% (86.8–92.2%) | 25.0% |
+| 4 | sampling | 3 × rule-based | 500 | 0.259 ± 0.027 | 50.2% (45.8–54.6%) | 25.0% |
+| 4 | sampling | 3 × heuristic | 500 | 0.408 ± 0.029 | 29.6% (25.8–33.7%) | 25.0% |
+| 8 | rule-based | 7 × random | 1000 | 0.051 ± 0.006 | 72.0% (69.1–74.7%) | 12.5% |
+| 8 | heuristic | 7 × random | 1000 | 0.022 ± 0.004 | 87.2% (85.0–89.1%) | 12.5% |
+| 8 | heuristic | 7 × rule-based | 1000 | 0.305 ± 0.018 | 30.7% (27.9–33.6%) | 12.5% |
+| 8 | sampling | 7 × random | 500 | 0.016 ± 0.005 | 89.8% (86.8–92.2%) | 12.5% |
+| 8 | sampling | 7 × rule-based | 500 | 0.227 ± 0.022 | 36.2% (32.1–40.5%) | 12.5% |
+| 8 | sampling | 7 × heuristic | 500 | 0.377 ± 0.027 | 21.4% (18.0–25.2%) | 12.5% |
+
+Rejected actions: 0 in all 13,500 matches. No match ended blocked. The raw results (one row per match, and the tournament output files) are kept locally, outside the repository.
+
+**The steps** (each level against the level directly below it, average position):
+
+| Step | 2 players | 4 players | 8 players |
+| --- | --- | --- | --- |
+| random → rule-based | 0.108 | 0.089 | 0.051 |
+| rule-based → heuristic | 0.341 | 0.358 | 0.305 |
+| heuristic → sampling | 0.322 | 0.408 | 0.377 |
+
+**Interpretation:**
+
+- **The order of the levels holds for every player count**, every interval is below 0.5, and the comparisons are consistent: against the same opponents a higher level always finishes better (for example against random: 0.108, 0.059, 0.022 with 2 players), and the sampling bot beats the rule-based bot by more than the heuristic bot does.
+- **The step from random to rule-based is by far the largest**; the two upper steps are similar in size, as intended in entry 18, except with 4 players, where the sampling bot's advantage over the heuristic bot is the smallest (0.408). With 300 matches and other seeds, entry 18 had measured 0.358 ± 0.038 for the same pairing; the two results overlap, and together they put the step at about 0.39.
+- **In win rates**, the sampling bot wins 1.36 times as often as an equal bot would with 2 players (67.8% instead of 50%), 1.18 times with 4 players, and 1.71 times with 8 players. The heuristic bot against the rule-based bot: 1.32, 1.55, and 2.46 times.
+- **Measured as a multiple of the equal-strength win rate, the advantage is largest with 8 players** for every pairing, because the stronger bot plays against several weaker players at once. Between 2 and 4 players it grows for every pairing except the sampling bot against the heuristic bot, where it shrinks from 1.36 to 1.18 times.
+
 ---
 
 ## Summary so far
 
 - Every level plays without a rejected action, and every decision fits easily within the turn timer.
 - The rule-based, heuristic, and sampling bots are all far stronger than the random baseline.
-- The levels are now ordered, each one measured against the level below it (0.5 means equal strength):
+- The levels are ordered for 2, 4, and 8 players, each one measured against the level below it in the large measurement of entry 20 (13,500 matches; 0.5 means equal strength):
 
-  | Level | Opponents | Average position |
-  | --- | --- | --- |
-  | rule-based | 3 random | 0.096 ± 0.011 (entry 13) |
-  | heuristic | 3 rule-based | 0.361 ± 0.022 (entry 18) |
-  | sampling | 3 heuristic | 0.358 ± 0.038 with 1380 playouts per decision, about 400 ms (entry 18) |
+  | Step | 2 players | 4 players | 8 players |
+  | --- | --- | --- | --- |
+  | random → rule-based | 0.108 | 0.089 | 0.051 |
+  | rule-based → heuristic | 0.341 | 0.358 | 0.305 |
+  | heuristic → sampling | 0.322 | 0.408 | 0.377 |
 
 - The game has a lot of luck (deal, draws, Storm values), so the advantage of the sampling bot over the heuristic bot is moderate and needs hundreds of matches to show; the gaps below it are clear.
 - What made the difference: not weight tuning, but new knowledge — the inferences from the opponents' draws and blocking the next player.
 - More search makes the sampling bot stronger only up to about 1400 playouts per decision (entry 15); successive halving (entry 14) and blocking in the playouts (entry 16) did not help.
 - An ISMCTS tree was weaker than the flat search with paired comparisons (entry 19).
-- Ideas for later entries: a larger measurement of the sampling bot with the tournament tool, results by player count (2–8), and samples weighted by how well they explain the opponents' moves.
+- Ideas for later entries: samples weighted by how well they explain the opponents' moves, and tests against human players.
