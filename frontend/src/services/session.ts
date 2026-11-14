@@ -62,3 +62,26 @@ export function saveDismissedMatchId(matchId: string | null): void {
     // Without storage the closed results come back after a reload.
   }
 }
+
+const GUEST_CHOICE_KEY = "wildhand.continueAsGuest";
+
+/** Whether the player chose to play as a guest on the welcome page; asked again in a new tab. */
+export function loadGuestChoice(): boolean {
+  try {
+    return sessionStorage.getItem(GUEST_CHOICE_KEY) === "true";
+  } catch {
+    return false;
+  }
+}
+
+export function saveGuestChoice(guest: boolean): void {
+  try {
+    if (guest) {
+      sessionStorage.setItem(GUEST_CHOICE_KEY, "true");
+    } else {
+      sessionStorage.removeItem(GUEST_CHOICE_KEY);
+    }
+  } catch {
+    // Without storage the welcome page comes back after a reload.
+  }
+}

@@ -6,17 +6,17 @@ This project uses a TypeScript-based full-stack setup: a React frontend, a Node.
 
 - `backend/`: Express and Socket.IO server, game engine, persistence.
 - `frontend/`: React application built with Vite.
-- `shared/`: the `@wildhand/shared` ES module package used by both the backend and the frontend: card types, the 104-card deck definition, rule constants, the single-card legality rule (`isPlayableOn`, also used by the engine) with legal-play helpers that work on a player's own view, error codes, client views, Socket.IO event names, typed event maps, and zod payload schemas. Build it with `npm run build` in `shared/` before the backend or frontend uses it.
+- `shared/`: the `@wildhand/shared` ES module package used by both the backend and the frontend: card types, the 104-card deck definition, rule constants, the single-card legality rule (`isPlayableOn`, also used by the engine) with legal-play helpers that work on a player's own view (including `getLegalActions`, the list of every distinct action used by the bots), error codes, client views, Socket.IO event names, typed event maps, and zod payload schemas. Build it with `npm run build` in `shared/` before the backend or frontend uses it.
 - `docs/`: technical documentation.
 
-The game engine (`backend/src/engine/`) is a pure TypeScript module without Socket.IO or database dependencies, so it can be tested directly and reused by the headless bot simulator (`docs/03`). Every action takes the current match state and an injectable random number generator, and returns either a new state with the public effects and the private events, or an error code without changing the state. Its tests are in `backend/test/engine/`.
+The game engine (`backend/src/engine/`) is a pure TypeScript module without Socket.IO or database dependencies, so it can be tested directly and reused by the computer players and the headless bot simulator (`docs/03`). The bots are in `backend/src/bots/`; they decide only from the messages a human client in their seat would receive. `backend/tools/simulate/` contains the single-match simulator (`simulate.ts`), the bot tournament (`tournament.ts`), and the tuning of the heuristic bot's weights (`tune.ts`). Every action takes the current match state and an injectable random number generator, and returns either a new state with the public effects and the private events, or an error code without changing the state. Its tests are in `backend/test/engine/`.
 
 Around the engine, the backend has two more layers:
 
 - `backend/src/game/`: the room service (rooms, sessions, host transfer, reconnect grace periods, duplicate and stale actions) and the match controller (seed, turn timer, delivery of effects, private events, and personal views). It has no Socket.IO dependency; time comes from an injectable scheduler, and messages leave through a transport interface addressed to single users.
 - `backend/src/socket/`: the Socket.IO handlers, which validate payloads with the shared zod schemas, answer with acknowledgements, and route each message to the socket of its user.
 
-The server is configured with `PORT`, `CORS_ORIGIN`, `TURN_TIMEOUT_MS`, and `RECONNECT_GRACE_MS` (see `backend/.env.example`).
+The server is configured with `PORT`, `CORS_ORIGIN`, `TURN_TIMEOUT_MS`, `RECONNECT_GRACE_MS`, `DATABASE_URL`, and the bot settings `BOT_THINK_MIN_MS`, `BOT_THINK_MAX_MS`, `BOT_SAMPLING_BUDGET_MS`, and `BOT_SAMPLING_WORKERS` (see `backend/.env.example`). `CORS_ORIGIN` must be the exact frontend origin (default `http://localhost:5173`), because the browser sends the login cookie with requests; `*` is rejected. With `NODE_ENV=production`, the login cookie is sent only over HTTPS.
 
 ## React + TypeScript
 
@@ -31,7 +31,8 @@ This combination is useful because:
 
 In this project, React is used for:
 
-- the landing page with language selection
+- the welcome page with login, registration, and the guest option
+- the landing page with language selection and the player's profile
 - the lobby
 - the gameplay interface, including the player's hand, action controls, turn timer, and Swap, Spy, and Color Change dialogs
 - the spectator view for players who have finished
@@ -61,7 +62,7 @@ frontend/src/
   main.tsx                  entry point
   app/                      root App component, providers, selection of the visible page
   pages/
-    <page>/                 landing, lobby, game, results
+    <page>/                 welcome, landing, lobby, game, results
       <Page>Page.tsx        page component
       components/           components used only on this page
       hooks/                hooks used only on this page
@@ -81,9 +82,9 @@ frontend/src/
 
 New code starts in the folder of the page that uses it and moves to the shared `components/`, `hooks/`, or `utils/` folder only when a second page starts using it. Pages are broken down into small components and custom hooks: components render the interface and may keep simple state that belongs to them alone, such as whether a menu is open; hooks hold all other state, timers, and other side effects, and connect components to the services.
 
-The services are the non-React infrastructure that exists once for the whole application: the single Socket.IO connection, a typed wrapper that sends actions with a generated `actionId` and returns their acknowledgements, and the storage of the reconnect token in the browser. The session is kept in `sessionStorage`: it survives a reload, and every browser tab is a separate player, so a second tab does not take over the first tab's session. On every (re)connect the client resumes the stored session with `session:resume`. They contain no React code and no game logic, so they can be tested without rendering components.
+The services are the non-React infrastructure that exists once for the whole application: the single Socket.IO connection, a typed wrapper that sends actions with a generated `actionId` and returns their acknowledgements, the storage of the reconnect token in the browser, and the account API client, which sends its requests with `credentials: "include"` so the browser stores and sends the HttpOnly login cookie. The session is kept in `sessionStorage`: it survives a reload, and every browser tab is a separate player, so a second tab does not take over the first tab's session. On every (re)connect the client resumes the stored session with `session:resume`. They contain no React code and no game logic, so they can be tested without rendering components.
 
-The application keeps only the latest `room:state`, `game:state`, and `game:ended` received from the server and shares them with the pages through a React context. The visible page is selected from this state, without URL routing: the landing page without a session, the lobby in a room without a running match, the gameplay page during a match, and the results page after a match until the player closes it. There is no `types/` folder, because shared types come from `@wildhand/shared`.
+The application keeps only the latest `room:state`, `game:state`, and `game:ended` received from the server and shares them with the pages through a React context. A second context holds the account: the profile from `GET /api/auth/me` and whether the player chose to continue as a guest (kept in `sessionStorage`, so a new tab asks again). After login, registration, or logout the socket reconnects, because the server reads the login cookie only when a socket connects. The visible page is selected from both, without URL routing: outside a room the welcome page until the player logs in or continues as a guest, then the landing page; the lobby in a room without a running match, the gameplay page during a match, and the results page after a match until the player closes it. There is no `types/` folder, because shared types come from `@wildhand/shared`.
 
 ### Styling
 
@@ -99,7 +100,8 @@ Express (version 5) is the backend web framework. It handles HTTP requests, rout
 
 In this project, Express is used for:
 
-- serving match history and statistics (planned)
+- the account API under `/api/auth`: registration, login, logout, and the own profile (`docs/03`)
+- serving profiles and statistics (planned)
 - health checks
 - hosting the Socket.IO server on the same HTTP server
 
@@ -109,13 +111,29 @@ PostgreSQL is the relational database used for persistent storage. The schema is
 
 It stores:
 
-- guest users
-- rooms
-- matches and their players
-- the action log of every match
-- finishing order, forfeits, and statistics
+- registered user accounts with their XP and profile counters
+- password hashes and login sessions
+- a prunable statistics log of finished matches and their players
 
-The live match state is kept in server memory; PostgreSQL stores the action log and the final results.
+Rooms, the live match state, guests, bots, and reconnect tokens are kept in server memory. The database is optional: without it, the server runs matches and stores nothing.
+
+- PostgreSQL runs in Docker for development, defined in a docker-compose file in the repository.
+- The backend uses the `pg` client with hand-written SQL, without an ORM.
+- Schema changes are plain SQL migrations applied by a small runner that records them in `schema_migrations`.
+- Passwords are hashed with argon2id.
+
+### Local setup
+
+1. Copy `.env.example` to `.env` in the repository root and `backend/.env.example` to `backend/.env`, and use the same passwords in both.
+2. Start the database with `docker compose up -d`. On the first start, `docker/postgres/init/01-setup.sh` creates the `wildhand_app` role and the `wildhand_test` database.
+3. Create or update the schema with `npm run db:migrate` in `backend/`. It connects with `MIGRATION_DATABASE_URL` (administrator role) and applies the new files in `backend/migrations/`.
+4. Start the backend with `npm run dev`. It connects with `DATABASE_URL` (the restricted `wildhand_app` role); if the variable is empty or the database is unreachable, it logs this and runs without storing anything.
+
+Schema changes are made only by adding a new numbered file to `backend/migrations/` (for example `0002_add_column.sql`); applied files are never edited. Each file runs in its own transaction and is recorded in `schema_migrations`. A new table needs its `GRANT`s for `wildhand_app` in the same migration.
+
+The integration tests in `backend/test/db/` run only when `TEST_DATABASE_URL` is set. They drop the schema of that database, so its name must end in `_test`. In CI, a PostgreSQL service container provides this database.
+
+`docker compose down -v` deletes the database volume together with all data.
 
 ## Socket.IO
 
@@ -155,7 +173,7 @@ Every event payload is validated on the server with the zod schemas from `shared
 - **React + TypeScript** gives a structured and type-safe frontend.
 - **i18n support** makes the interface available in English, Hungarian, and German.
 - **Express** provides a simple and flexible backend layer.
-- **PostgreSQL** stores match history and action logs reliably.
+- **PostgreSQL** stores user accounts, XP, and match statistics reliably.
 - **Socket.IO** supports fast multiplayer interaction with per-player messages.
 - **Shared TypeScript types** keep the client and the server protocol consistent.
 

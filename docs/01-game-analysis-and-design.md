@@ -27,7 +27,7 @@ Compared with these games, Wildhand combines:
 
 ### Setup
 
-- **R1 – Player count**: a match supports 2–8 players. The server validates the limit.
+- **R1 – Player count**: a match supports 2–8 players. Computer players (bots) added by the host count towards the limit. The server validates the limit.
 - **R2 – Deck**: the base deck contains 104 cards: 80 number cards (4 colors × numbers 0–9 × 2 copies), 8 +2 (2 per color), 4 Swap (1 per color), 4 Storm, 4 Color Change, and 4 Spy. +2 and Swap are **colored special cards**. Storm, Color Change, and Spy are **wild cards** with no color. Special cards have no number.
 - **R3 – Dealing**: each player receives 7 cards. The starting card is a random number card; a special card drawn as the starting card is returned to the draw pile at a random position and another card is drawn. A random connected player takes the first turn, and play continues clockwise in seat order. A member who is within the reconnect grace period when the match starts (R23) is not selected; if nobody is connected, the first player to reconnect takes the turn.
 
@@ -59,13 +59,13 @@ Compared with these games, Wildhand combines:
 ### Finishing and match end
 
 - **R20 – Finish check**: after the played card or combo and all of its effects are resolved, a player with an empty hand finishes. The first player to finish is the winner; later players take the next positions.
-- **R21 – Match end**: the match ends when only one active player remains (that player takes the last non-forfeited position) or when the game is blocked (R18). If the match ends while a +2 penalty is pending, the penalty is discarded. If every other player forfeits before anyone finishes, the remaining player is the winner. No turn is created after the match ends.
+- **R21 – Match end**: the match ends when only one active player remains (that player takes the last non-forfeited position) or when the game is blocked (R18). If the match ends while a +2 penalty is pending, the penalty is discarded. If every other player forfeits before anyone finishes, the remaining player is the winner. A match with bots also ends when no human player is left in the room: the remaining active players share the next position, as in a blocked game (R18), and a pending +2 penalty is discarded. A finished human who stays in the room as a spectator keeps the match running. No turn is created after the match ends.
 
 ### Time limits, connection, and room rules
 
 - **R22 – Turn timer**: every turn has a time limit. On timeout, the server draws the pending +2 penalty for the player, or otherwise draws one card (or passes if they hold 20 cards), even if the player holds a legal card.
 - **R23 – Disconnect and forfeit**: a disconnected player keeps their seat and status during a grace period, but their turns are skipped (except under R10) and they cannot be selected as Swap or Spy targets. A player who disconnects during their own turn keeps that turn until the turn timer expires. If no active player is connected, the match waits until a player reconnects or the grace periods expire; the first active player to reconnect takes the turn. A player who does not reconnect within the grace period, or who leaves an unfinished match, forfeits: their hand is removed from play, and they are ranked below every non-forfeited player. Players who forfeit later rank above players who forfeited earlier. A forfeit can trigger R21.
-- **R24 – Host**: the host starts the match. If the host leaves the room, in the lobby or during a match, the member who has been in the room the longest becomes the host.
+- **R24 – Host**: the host starts the match and adds or removes bots in the lobby. If the host leaves the room, in the lobby or during a match, the human member who has been in the room the longest becomes the host; a bot never becomes the host.
 - **R25 – Hidden information**: each player receives only their own hand. Other players' hands are visible only as hand sizes. Spy snapshots go only to the Spy player. Spectators receive the public state only and never see private hands.
 
 ## 3. State Flow Overview
@@ -79,7 +79,8 @@ The detailed state machine is defined in `docs/02-server-state-machine-and-socke
 
 ## 4. Page Flow
 
-- **Landing page**: language selection, display name, create or join a room.
+- **Welcome page**: shown first outside a room; log in, register, or continue as a guest. Without a database only the guest option is offered.
+- **Landing page**: language selection, create or join a room; a logged-in player sees the profile (XP, matches played, wins, forfeits) and plays under the account name, a guest types a display name.
 - **Lobby page**: room members, host controls, and the start button for the host.
 - **Gameplay page**: the player's hand, the discard pile, other players' hand sizes, turn and timer indicators, and Swap, Spy, and Color Change dialogs. Finished players stay on this page in spectator mode with the public state only.
 - **Results page**: the winner, the finishing order, and forfeits.

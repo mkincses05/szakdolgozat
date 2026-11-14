@@ -1,0 +1,29 @@
+{
+  "intro": "Log in to collect experience points, or play as a guest.",
+  "showLogin": "Log in",
+  "showRegister": "Register",
+  "continueAsGuest": "Continue as a guest",
+  "login": {
+    "title": "Log in",
+    "login": "Username or email",
+    "password": "Password",
+    "submit": "Log in",
+    "missingInput": "Enter your username or email and your password."
+  },
+  "register": {
+    "title": "Register",
+    "fields": {
+      "username": "Username",
+      "email": "Email",
+      "displayName": "Display name",
+      "password": "Password"
+    },
+    "submit": "Create account",
+    "validation": {
+      "username": "The username must be {{min}}–{{max}} characters long and contain only letters, digits, and the characters . _ -",
+      "email": "Enter a valid email address.",
+      "displayName": "The display name must be {{min}}–{{max}} characters long.",
+      "password": "The password must be {{min}}–{{max}} characters long."
+    }
+  }
+}

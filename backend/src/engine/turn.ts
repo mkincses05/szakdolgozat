@@ -85,7 +85,7 @@ export function isBlocked(state: MatchState): boolean {
  * Mutates `state`. Remaining active players share the next position; forfeited players rank below
  * them, later forfeits above earlier ones (R18, R21, R23). Positions use competition ranking.
  */
-function endMatch(state: MatchState, reason: MatchEndReason): void {
+export function endMatch(state: MatchState, reason: MatchEndReason): void {
   const remaining = activePlayers(state);
   const sharedPosition = state.finishingOrder.length + 1;
 

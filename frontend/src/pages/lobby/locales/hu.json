@@ -8,5 +8,17 @@
   "host": "házigazda",
   "start": "Meccs indítása",
   "waitingForHost": "Várakozás arra, hogy a házigazda elindítsa a meccset.",
-  "leave": "Kilépés a szobából"
+  "leave": "Kilépés a szobából",
+  "bots": {
+    "title": "Gépi játékosok",
+    "level": "Erősség",
+    "add": "Bot hozzáadása",
+    "remove": "{{name}} eltávolítása",
+    "descriptions": {
+      "random": "Véletlenszerű szabályos lépést tesz. A leggyengébb ellenfél.",
+      "rule_based": "Rögzített sorrend szerint dönt, például a +2-re +2-vel válaszol.",
+      "heuristic": "Minden lépést mérlegel, például későbbre tartogatja a joker lapokat.",
+      "sampling": "Sokszor elképzeli a rejtett lapokat, és előre lejátssza a játékot."
+    }
+  }
 }

@@ -13,5 +13,6 @@ export type MatchStatus = (typeof MATCH_STATUSES)[number];
 export const PRESENCES = ["connected", "disconnected", "left"] as const;
 export type Presence = (typeof PRESENCES)[number];
 
-export const MATCH_END_REASONS = ["last_player", "blocked", "forfeits"] as const;
+/** `no_humans`: only computer players are left in the match (R21). */
+export const MATCH_END_REASONS = ["last_player", "blocked", "forfeits", "no_humans"] as const;
 export type MatchEndReason = (typeof MATCH_END_REASONS)[number];

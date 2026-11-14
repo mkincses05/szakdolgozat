@@ -25,7 +25,8 @@ export function toPublicMatchView(state: MatchState, context: ViewContext): Publ
       matchStatus: player.matchStatus,
       presence: player.presence,
       finishPosition: player.finishPosition,
-      isBot: player.isBot
+      isBot: player.isBot,
+      botLevel: player.botLevel
     })),
     currentPlayerId: state.currentPlayerId,
     topCard: structuredClone(topCard(state)),

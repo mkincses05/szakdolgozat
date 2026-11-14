@@ -1,5 +1,6 @@
 import type { MatchView, PublicPlayerView } from "@wildhand/shared";
 import { useTranslation } from "react-i18next";
+import { useBotLabel } from "../../../hooks/useBotLabel";
 
 interface PlayerListProps {
   view: MatchView;
@@ -8,6 +9,7 @@ interface PlayerListProps {
 
 export function PlayerList({ view, userId }: PlayerListProps) {
   const { t } = useTranslation("game");
+  const botLabel = useBotLabel();
 
   const describe = (player: PublicPlayerView) =>
     [
@@ -27,6 +29,7 @@ export function PlayerList({ view, userId }: PlayerListProps) {
         {view.players.map((player) => (
           <li key={player.userId}>
             {player.displayName}
+            {player.botLevel !== null && ` (${botLabel(player.botLevel)})`}
             {player.userId === userId && ` (${t("players.you")})`}: {describe(player)}
           </li>
         ))}

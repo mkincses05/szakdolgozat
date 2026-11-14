@@ -1,6 +1,5 @@
 {
   "tagline": "Többjátékos kártyajáték",
-  "language": "Nyelv",
   "displayName": "A neved",
   "createRoom": "Szoba létrehozása",
   "roomCode": "Szobakód",
@@ -8,5 +7,15 @@
   "validation": {
     "displayName": "A neved {{min}}–{{max}} karakter hosszú lehet.",
     "roomCode": "A szobakód {{length}} betűből vagy számjegyből áll."
+  },
+  "account": {
+    "title": "A fiókod",
+    "loggedInAs": "Bejelentkezve: {{name}} ({{username}})",
+    "xp": "Tapasztalati pontok",
+    "matchesPlayed": "Lejátszott meccsek",
+    "wins": "Győzelmek",
+    "forfeits": "Feladások",
+    "logout": "Kijelentkezés",
+    "logInOrRegister": "Belépés vagy regisztráció"
   }
 }

@@ -7,16 +7,20 @@ import type { MatchResults } from "./results.js";
 import {
   gameDrawPayloadSchema,
   gamePlayPayloadSchema,
+  roomAddBotPayloadSchema,
   roomCreatePayloadSchema,
   roomJoinPayloadSchema,
   roomLeavePayloadSchema,
+  roomRemoveBotPayloadSchema,
   roomStartPayloadSchema,
   sessionResumePayloadSchema,
   type GameDrawPayload,
   type GamePlayPayload,
+  type RoomAddBotPayload,
   type RoomCreatePayload,
   type RoomJoinPayload,
   type RoomLeavePayload,
+  type RoomRemoveBotPayload,
   type RoomStartPayload,
   type SessionResumePayload
 } from "./schemas.js";
@@ -27,6 +31,8 @@ export const CLIENT_EVENTS = {
   roomJoin: "room:join",
   roomLeave: "room:leave",
   roomStart: "room:start",
+  roomAddBot: "room:addBot",
+  roomRemoveBot: "room:removeBot",
   gamePlay: "game:play",
   gameDraw: "game:draw",
   sessionResume: "session:resume"
@@ -46,6 +52,8 @@ export const clientPayloadSchemas = {
   [CLIENT_EVENTS.roomJoin]: roomJoinPayloadSchema,
   [CLIENT_EVENTS.roomLeave]: roomLeavePayloadSchema,
   [CLIENT_EVENTS.roomStart]: roomStartPayloadSchema,
+  [CLIENT_EVENTS.roomAddBot]: roomAddBotPayloadSchema,
+  [CLIENT_EVENTS.roomRemoveBot]: roomRemoveBotPayloadSchema,
   [CLIENT_EVENTS.gamePlay]: gamePlayPayloadSchema,
   [CLIENT_EVENTS.gameDraw]: gameDrawPayloadSchema,
   [CLIENT_EVENTS.sessionResume]: sessionResumePayloadSchema
@@ -71,6 +79,8 @@ export interface ClientToServerEvents {
   "room:join": (payload: RoomJoinPayload, ack: AckCallback<SessionInfo>) => void;
   "room:leave": (payload: RoomLeavePayload, ack: AckCallback) => void;
   "room:start": (payload: RoomStartPayload, ack: AckCallback) => void;
+  "room:addBot": (payload: RoomAddBotPayload, ack: AckCallback) => void;
+  "room:removeBot": (payload: RoomRemoveBotPayload, ack: AckCallback) => void;
   "game:play": (payload: GamePlayPayload, ack: AckCallback) => void;
   "game:draw": (payload: GameDrawPayload, ack: AckCallback) => void;
   "session:resume": (payload: SessionResumePayload, ack: AckCallback<SessionInfo>) => void;

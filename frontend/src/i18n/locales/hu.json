@@ -2,6 +2,7 @@
   "app": {
     "title": "Wildhand"
   },
+  "language": "Nyelv",
   "languages": {
     "en": "English",
     "hu": "Magyar",
@@ -38,12 +39,27 @@
     "disconnected": "nincs kapcsolat",
     "left": "kilépett"
   },
+  "bots": {
+    "tag": "bot, {{level}}",
+    "levels": {
+      "random": "véletlen",
+      "rule_based": "szabályalapú",
+      "heuristic": "heurisztikus",
+      "sampling": "mintavételes"
+    }
+  },
   "errors": {
     "invalid_payload": "Érvénytelen kérés.",
     "stale_state": "Közben megváltozott a játék állása. Próbáld újra.",
     "internal_error": "Hiba történt a szerveren.",
     "invalid_reconnect_token": "Az előző játékod nem található.",
     "session_expired": "Az előző játékod lejárt.",
+    "database_unavailable": "A fiókok most nem érhetők el. Vendégként továbbra is játszhatsz.",
+    "username_taken": "Ez a felhasználónév már foglalt.",
+    "email_taken": "Ezzel az email-címmel már van fiók.",
+    "invalid_credentials": "Hibás felhasználónév, email-cím vagy jelszó.",
+    "not_logged_in": "Nem vagy bejelentkezve.",
+    "account_already_in_room": "A fiókoddal már játszol ebben a szobában.",
     "room_not_found": "Nincs ilyen kódú szoba.",
     "room_full": "A szoba megtelt.",
     "room_in_match": "Ebben a szobában már folyik egy meccs.",
@@ -52,6 +68,7 @@
     "not_host": "Ezt csak a házigazda teheti meg.",
     "not_enough_players": "Nincs elég játékos a meccs indításához.",
     "too_many_players": "Túl sok játékos van a szobában.",
+    "bot_not_found": "Ez a bot már nincs a szobában.",
     "match_not_running": "Nem folyik meccs.",
     "not_in_match": "Nem játszol ebben a meccsben.",
     "player_not_active": "Már nem vagy aktív játékos ebben a meccsben.",

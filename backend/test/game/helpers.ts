@@ -1,6 +1,6 @@
 import type { Ack, ServerToClientEvents, SessionInfo } from "@wildhand/shared";
 import { expect } from "vitest";
-import { RoomService, type RandomSource } from "../../src/game/room-service.js";
+import { RoomService, type RandomSource, type RoomServiceOptions } from "../../src/game/room-service.js";
 import type { Transport } from "../../src/game/transport.js";
 import type { Logger } from "../../src/logger.js";
 import type { Scheduler, TimerHandle } from "../../src/scheduler.js";
@@ -110,7 +110,7 @@ export function expectOkAck<T>(ack: Ack<T>): T {
   return (ack as { data?: T }).data as T;
 }
 
-export function setup(seed = 1) {
+export function setup(seed = 1, overrides: Partial<RoomServiceOptions> = {}) {
   const transport = new RecordingTransport();
   const scheduler = new FakeScheduler();
   const random = sequentialRandom(seed);
@@ -120,7 +120,8 @@ export function setup(seed = 1) {
     logger: silentLogger,
     random,
     turnTimeoutMs: TURN_TIMEOUT_MS,
-    reconnectGraceMs: RECONNECT_GRACE_MS
+    reconnectGraceMs: RECONNECT_GRACE_MS,
+    ...overrides
   });
   const noBind = () => {};
 
@@ -142,8 +143,8 @@ export function setup(seed = 1) {
 }
 
 /** Creates a room with `count` members and starts the match. */
-export function startedRoom(count: number, seed = 1) {
-  const context = setup(seed);
+export function startedRoom(count: number, seed = 1, overrides: Partial<RoomServiceOptions> = {}) {
+  const context = setup(seed, overrides);
   const host = context.create("Player 1");
   const members = [host];
   for (let index = 2; index <= count; index++) {

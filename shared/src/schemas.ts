@@ -3,6 +3,7 @@
 // against the authoritative state.
 
 import { z } from "zod";
+import { BOT_LEVELS } from "./bots.js";
 import { CARD_COLORS } from "./cards.js";
 import {
   DISPLAY_NAME_MAX_LENGTH,
@@ -46,6 +47,16 @@ export const roomLeavePayloadSchema = actionSchema;
 
 export const roomStartPayloadSchema = actionSchema;
 
+export const botLevelSchema = z.enum(BOT_LEVELS);
+
+export const roomAddBotPayloadSchema = actionSchema.extend({
+  level: botLevelSchema
+});
+
+export const roomRemoveBotPayloadSchema = actionSchema.extend({
+  botId: idSchema
+});
+
 export const gamePlayPayloadSchema = gameActionSchema
   .extend({
     cardIds: z.array(idSchema).min(1).max(HAND_LIMIT),
@@ -77,6 +88,8 @@ export type RoomCreatePayload = z.infer<typeof roomCreatePayloadSchema>;
 export type RoomJoinPayload = z.infer<typeof roomJoinPayloadSchema>;
 export type RoomLeavePayload = z.infer<typeof roomLeavePayloadSchema>;
 export type RoomStartPayload = z.infer<typeof roomStartPayloadSchema>;
+export type RoomAddBotPayload = z.infer<typeof roomAddBotPayloadSchema>;
+export type RoomRemoveBotPayload = z.infer<typeof roomRemoveBotPayloadSchema>;
 export type GamePlayPayload = z.infer<typeof gamePlayPayloadSchema>;
 export type GameDrawPayload = z.infer<typeof gameDrawPayloadSchema>;
 export type SessionResumePayload = z.infer<typeof sessionResumePayloadSchema>;

@@ -1,7 +1,7 @@
 import type { Card, PlayerMatchView, RoomView } from "@wildhand/shared";
 import { act, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { App } from "../../app/App";
-import { saveSession } from "../../services/session";
+import { saveSession, saveGuestChoice } from "../../services/session";
 import { fakeSocket } from "../../test/fakeSocket";
 
 vi.mock("../../services/socket", async () => ({ socket: (await import("../../test/fakeSocket")).fakeSocket }));
@@ -23,8 +23,8 @@ const room: RoomView = {
   state: "in_match",
   hostUserId: "u1",
   members: [
-    { userId: "u1", displayName: "Anna", presence: "connected" },
-    { userId: "u2", displayName: "Bela", presence: "connected" }
+    { userId: "u1", displayName: "Anna", presence: "connected", isBot: false, botLevel: null },
+    { userId: "u2", displayName: "Bela", presence: "connected", isBot: false, botLevel: null }
   ],
   minPlayers: 2,
   maxPlayers: 8
@@ -37,9 +37,9 @@ function matchView(overrides: Partial<PlayerMatchView> = {}): PlayerMatchView {
     matchId: "m1",
     phase: "awaiting_action",
     players: [
-      { userId: "u1", displayName: "Anna", seat: 0, handSize: 6, matchStatus: "active", presence: "connected", finishPosition: null, isBot: false },
-      { userId: "u2", displayName: "Bela", seat: 1, handSize: 1, matchStatus: "active", presence: "disconnected", finishPosition: null, isBot: false },
-      { userId: "u3", displayName: "Cili", seat: 2, handSize: 3, matchStatus: "active", presence: "connected", finishPosition: null, isBot: false }
+      { userId: "u1", displayName: "Anna", seat: 0, handSize: 6, matchStatus: "active", presence: "connected", finishPosition: null, isBot: false, botLevel: null },
+      { userId: "u2", displayName: "Bela", seat: 1, handSize: 1, matchStatus: "active", presence: "disconnected", finishPosition: null, isBot: false, botLevel: null },
+      { userId: "u3", displayName: "Cili", seat: 2, handSize: 3, matchStatus: "active", presence: "connected", finishPosition: null, isBot: false, botLevel: null }
     ],
     currentPlayerId: "u1",
     topCard: { id: "r2", deckInstance: 1, kind: "number", color: "red", number: 2 },
@@ -73,6 +73,8 @@ describe("GamePage", () => {
   beforeEach(() => {
     fakeSocket.reset();
     sessionStorage.clear();
+    // Without a session these tests start on the landing page, as a guest.
+    saveGuestChoice(true);
   });
 
   it("shows the public match state", async () => {
@@ -164,6 +166,8 @@ describe("GamePage special cards", () => {
   beforeEach(() => {
     fakeSocket.reset();
     sessionStorage.clear();
+    // Without a session these tests start on the landing page, as a guest.
+    saveGuestChoice(true);
   });
 
   const lastPayload = () => fakeSocket.emitWithAck.mock.lastCall?.[1];

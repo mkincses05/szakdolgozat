@@ -14,6 +14,8 @@ export interface Session {
   userId: string;
   reconnectToken: string;
   displayName: string;
+  /** The registered account playing in this session; `null` for a guest. */
+  accountId: string | null;
   roomCode: string;
   connected: boolean;
   graceTimer: TimerHandle | null;
@@ -32,11 +34,12 @@ export class SessionRegistry {
 
   constructor(private readonly ids: IdSource) {}
 
-  create(displayName: string, roomCode: string): Session {
+  create(displayName: string, roomCode: string, accountId: string | null = null): Session {
     const session: Session = {
       userId: this.ids.userId(),
       reconnectToken: this.ids.reconnectToken(),
       displayName,
+      accountId,
       roomCode,
       connected: true,
       graceTimer: null,

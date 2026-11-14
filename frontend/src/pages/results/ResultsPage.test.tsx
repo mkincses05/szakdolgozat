@@ -1,7 +1,7 @@
 import type { MatchResults, PlayerMatchView, RoomView } from "@wildhand/shared";
 import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { App } from "../../app/App";
-import { loadSession, saveSession } from "../../services/session";
+import { loadSession, saveSession, saveGuestChoice } from "../../services/session";
 import { fakeSocket } from "../../test/fakeSocket";
 
 vi.mock("../../services/socket", async () => ({ socket: (await import("../../test/fakeSocket")).fakeSocket }));
@@ -13,8 +13,8 @@ const room: RoomView = {
   state: "lobby",
   hostUserId: "u1",
   members: [
-    { userId: "u1", displayName: "Anna", presence: "connected" },
-    { userId: "u2", displayName: "Bela", presence: "connected" }
+    { userId: "u1", displayName: "Anna", presence: "connected", isBot: false, botLevel: null },
+    { userId: "u2", displayName: "Bela", presence: "connected", isBot: false, botLevel: null }
   ],
   minPlayers: 2,
   maxPlayers: 8
@@ -28,7 +28,8 @@ const player = (userId: string, displayName: string, seat: number) => ({
   matchStatus: "active" as const,
   presence: "connected" as const,
   finishPosition: null,
-  isBot: false
+  isBot: false,
+  botLevel: null
 });
 
 // Cili has left the room, so her name is known only from the match view.
@@ -78,6 +79,8 @@ describe("ResultsPage", () => {
   beforeEach(() => {
     fakeSocket.reset();
     sessionStorage.clear();
+    // Without a session these tests start on the landing page, as a guest.
+    saveGuestChoice(true);
   });
 
   it("shows the winner, the end reason, and the standings from the server", async () => {
@@ -91,6 +94,35 @@ describe("ResultsPage", () => {
       "2. Anna (you)",
       "2. Dani",
       "4. Cili – forfeited"
+    ]);
+  });
+
+  it("marks bots with their level and explains a match ended without humans", async () => {
+    saveSession(session);
+    fakeSocket.emitWithAck.mockResolvedValueOnce({ ok: true, data: session });
+    render(<App />);
+    await waitFor(() => expect(screen.getByText("Loading…")).toBeInTheDocument());
+    act(() => {
+      fakeSocket.receive("game:state", {
+        ...endedMatch,
+        players: [player("u1", "Anna", 0), { ...player("bot-1", "Bot 1", 1), isBot: true, botLevel: "heuristic" }]
+      });
+      fakeSocket.receive("game:ended", {
+        matchId: "m1",
+        endReason: "no_humans",
+        winnerId: "bot-1",
+        standings: [
+          { userId: "bot-1", position: 1, matchStatus: "finished" },
+          { userId: "u1", position: 2, matchStatus: "forfeited" }
+        ]
+      });
+      fakeSocket.receive("room:state", room);
+    });
+
+    expect(screen.getByText(/no human player was left/)).toBeInTheDocument();
+    expect(screen.getAllByRole("listitem").map((item) => item.textContent)).toEqual([
+      "1. Bot 1 (bot, heuristic)",
+      "2. Anna (you) – forfeited"
     ]);
   });
 

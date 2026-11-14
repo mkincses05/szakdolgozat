@@ -9,6 +9,13 @@ export const ERROR_CODES = [
   "invalid_reconnect_token",
   "session_expired",
 
+  "database_unavailable",
+  "username_taken",
+  "email_taken",
+  "invalid_credentials",
+  "not_logged_in",
+  "account_already_in_room",
+
   "room_not_found",
   "room_full",
   "room_in_match",
@@ -17,6 +24,7 @@ export const ERROR_CODES = [
   "not_host",
   "not_enough_players",
   "too_many_players",
+  "bot_not_found",
 
   "match_not_running",
   "not_in_match",
