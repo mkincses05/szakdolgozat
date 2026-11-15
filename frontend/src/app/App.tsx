@@ -7,7 +7,7 @@ export function App() {
   return (
     <ServerStateProvider>
       <AccountProvider>
-        <div className="flex flex-col gap-4 p-4">
+        <div className="min-h-dvh">
           <ConnectionStatus />
           <CurrentPage />
         </div>

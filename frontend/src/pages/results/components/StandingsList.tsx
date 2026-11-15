@@ -1,5 +1,6 @@
 import type { BotLevel, Standing } from "@wildhand/shared";
 import { useTranslation } from "react-i18next";
+import { Avatar } from "../../../components/Avatar";
 import { useBotLabel } from "../../../hooks/useBotLabel";
 
 interface StandingsListProps {
@@ -17,11 +18,18 @@ export function StandingsList({ standings, userId, nameOf, botLevelOf }: Standin
   return (
     <section>
       <h2>{t("standings")}</h2>
-      <ul>
+      <ul className="flex flex-col gap-2">
         {standings.map((standing) => {
           const botLevel = botLevelOf(standing.userId);
           return (
-            <li key={standing.userId}>
+            <li key={standing.userId} className="flex items-center gap-3">
+              <Avatar
+                userId={standing.userId}
+                isBot={botLevel !== null}
+                size="sm"
+                crown={standing.position === 1}
+                dimmed={standing.matchStatus === "forfeited"}
+              />
               {t("place", { position: standing.position, name: nameOf(standing.userId) })}
               {botLevel !== null && ` (${botLabel(botLevel)})`}
               {standing.userId === userId && ` (${t("you")})`}

@@ -1,6 +1,10 @@
 {
   "title": "Váróterem",
-  "roomCode": "Szobakód: {{code}}",
+  "roomCodeLabel": "Szobakód",
+  "copyCode": "Kód másolása",
+  "copied": "Kimásolva!",
+  "copyFailed": "Nem sikerült kimásolni a kódot. Jelöld ki, és másold ki kézzel.",
+  "emptySeat": "Szabad hely",
   "shareCode": "Oszd meg ezt a kódot a többi játékossal.",
   "players": "Játékosok ({{count}}/{{max}})",
   "minPlayers": "A meccs indításához legalább {{min}} játékos kell.",

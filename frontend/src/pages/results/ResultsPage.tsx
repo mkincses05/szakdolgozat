@@ -1,4 +1,5 @@
 import { useTranslation } from "react-i18next";
+import { Button } from "../../components/Button";
 import { ErrorMessage } from "../../components/ErrorMessage";
 import { useLeaveRoom } from "../../hooks/useLeaveRoom";
 import { useServerState } from "../../hooks/useServerState";
@@ -18,19 +19,19 @@ export function ResultsPage() {
   }
 
   return (
-    <main className="flex max-w-md flex-col gap-4">
+    <main className="mx-auto flex max-w-md flex-col gap-4 px-4 py-6">
       <h1>{t("title")}</h1>
       <p>{t("winner", { name: nameOf(results.winnerId) })}</p>
       <p>{t(`endReason.${results.endReason}`)}</p>
 
       <StandingsList standings={results.standings} userId={session.userId} nameOf={nameOf} botLevelOf={botLevelOf} />
 
-      <button type="button" className="border px-2 py-1" onClick={dismissResults}>
+      <Button size="lg" onClick={dismissResults}>
         {t("backToLobby")}
-      </button>
-      <button type="button" className="border px-2 py-1" disabled={leave.pending} onClick={leave.leaveRoom}>
+      </Button>
+      <Button variant="secondary" disabled={leave.pending} onClick={leave.leaveRoom}>
         {t("leave")}
-      </button>
+      </Button>
       <ErrorMessage code={leave.error} />
     </main>
   );

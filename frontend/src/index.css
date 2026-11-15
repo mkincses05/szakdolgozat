@@ -1,2 +1,124 @@
 @import "tailwindcss";
 @import "./styles/animations.css";
+
+/* Fredoka (SIL Open Font License, see assets/fonts/OFL.txt), variable weight 300–700. */
+@font-face {
+  font-family: "Fredoka";
+  font-style: normal;
+  font-display: swap;
+  font-weight: 300 700;
+  src: url("./assets/fonts/fredoka-latin.woff2") format("woff2");
+  unicode-range:
+    U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F,
+    U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+@font-face {
+  font-family: "Fredoka";
+  font-style: normal;
+  font-display: swap;
+  font-weight: 300 700;
+  src: url("./assets/fonts/fredoka-latin-ext.woff2") format("woff2");
+  unicode-range:
+    U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF,
+    U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+
+/*
+ * Design tokens: the only place where colors, radii, shadows, and fonts are defined. Components use
+ * them through the generated utilities (`bg-card-red`, `rounded-card`, `shadow-panel`, `font-display`).
+ */
+@theme {
+  --font-display: "Fredoka", ui-rounded, "Segoe UI", system-ui, sans-serif;
+
+  /* Card colors: the base shade and the light and dark ends of the card gradient. */
+  --color-card-red: #e8323f;
+  --color-card-red-light: #ff6f76;
+  --color-card-red-dark: #a91828;
+  --color-card-yellow: #ffc21a;
+  --color-card-yellow-light: #ffe070;
+  --color-card-yellow-dark: #d98a00;
+  --color-card-green: #22b552;
+  --color-card-green-light: #5ee08a;
+  --color-card-green-dark: #12803a;
+  --color-card-blue: #1e88f0;
+  --color-card-blue-light: #62b6ff;
+  --color-card-blue-dark: #0f55b8;
+  /* Wild cards: Storm, Color Change, and Spy. */
+  --color-card-wild: #7a3ee6;
+  --color-card-wild-light: #a97bff;
+  --color-card-wild-dark: #3d1c8f;
+  --color-card-paper: #fffdf7;
+  --color-card-back: #13307a;
+  --color-card-back-light: #2f5fd0;
+
+  /* Interface. */
+  --color-brand: #6b3ff0;
+  --color-brand-light: #946dff;
+  --color-brand-dark: #4320b8;
+  --color-accent: #ffc83d;
+  --color-accent-light: #ffe48a;
+  --color-accent-dark: #e8930c;
+  --color-table: #1b74e4;
+  --color-table-light: #4ea8ff;
+  --color-table-dark: #0b4598;
+  --color-room: #f3b46e;
+  --color-room-light: #ffe6c2;
+  --color-room-dark: #d98546;
+  --color-surface: #232a63;
+  --color-surface-raised: #313b85;
+  --color-surface-sunken: #171c47;
+  --color-ink: #ffffff;
+  --color-ink-muted: #c6cbf2;
+  --color-ink-dark: #241f4a;
+  --color-ink-soft: #5a5480;
+  --color-success: var(--color-card-green);
+  --color-danger: var(--color-card-red);
+  --color-warning: #ffb020;
+
+  /* Avatars. */
+  --color-skin-1: #ffdcc4;
+  --color-skin-2: #f5c29b;
+  --color-skin-3: #dda072;
+  --color-skin-4: #b5754a;
+  --color-skin-5: #7e4f2e;
+  --color-hair-1: #2b1d14;
+  --color-hair-2: #5b3a21;
+  --color-hair-3: #a8652a;
+  --color-hair-4: #e8b04b;
+  --color-hair-5: #c8462d;
+  --color-blush: #ff8fa3;
+  --color-robot: #c3cde3;
+  --color-robot-dark: #6f7ea3;
+  --color-robot-eye: #4ff0ff;
+
+  /* Shape and depth. Card values are in `em`, so they scale with the card size. */
+  --radius-card: 0.7em;
+  --radius-panel: 1.75rem;
+  --shadow-card: 0 0.12em 0 rgb(0 0 0 / 0.12), 0 0.4em 0.8em rgb(20 16 60 / 0.3);
+  --shadow-card-lifted: 0 0.2em 0 rgb(0 0 0 / 0.1), 0 0.9em 1.6em rgb(20 16 60 / 0.4);
+  --shadow-panel: 0 10px 30px rgb(20 16 60 / 0.35);
+  --shadow-button: 0 4px 0 rgb(0 0 0 / 0.25);
+  --shadow-glow: 0 0 0 4px var(--color-accent), 0 0 18px 4px rgb(255 200 61 / 0.7);
+  --inset-shadow-felt: inset 0 0 48px rgb(0 0 0 / 0.35);
+}
+
+/* Gradients that combine several tokens, used through `bg-(image:--gradient-…)`. */
+@theme static {
+  --gradient-rainbow: linear-gradient(
+    90deg,
+    var(--color-card-red),
+    var(--color-card-yellow),
+    var(--color-card-green),
+    var(--color-card-blue),
+    var(--color-card-wild)
+  );
+  --gradient-rainbow-conic: conic-gradient(
+    from 45deg,
+    var(--color-card-red),
+    var(--color-card-yellow),
+    var(--color-card-green),
+    var(--color-card-blue),
+    var(--color-card-red)
+  );
+}

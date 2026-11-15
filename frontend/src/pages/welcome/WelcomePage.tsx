@@ -3,8 +3,11 @@
 
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
+import { Button } from "../../components/Button";
 import { ErrorMessage } from "../../components/ErrorMessage";
+import { HeroBanner } from "../../components/HeroBanner";
 import { LanguageSelect } from "../../components/LanguageSelect";
+import { Panel } from "../../components/Panel";
 import { useAccount } from "../../hooks/useAccount";
 import { LoginForm } from "./components/LoginForm";
 import { RegisterForm } from "./components/RegisterForm";
@@ -15,38 +18,36 @@ export function WelcomePage() {
   const { t } = useTranslation("welcome");
   const account = useAccount();
   const [form, setForm] = useState<Form | null>(null);
+  const accountsAvailable = account.status !== "unavailable";
 
   return (
-    <main className="flex max-w-sm flex-col gap-4">
-      <h1>{t("common:app.title")}</h1>
-      <p>{t("intro")}</p>
+    <main className="mx-auto flex w-full max-w-md flex-col gap-6 px-4 py-6">
+      <div className="self-end">
+        <LanguageSelect />
+      </div>
+      <HeroBanner subtitle={t("intro")} />
 
-      <LanguageSelect />
+      <Panel className="flex flex-col gap-4">
+        {accountsAvailable ? (
+          <div className="grid grid-cols-2 gap-2 rounded-full bg-ink-dark/5 p-1.5">
+            <Button variant="secondary" aria-pressed={form === "login"} onClick={() => setForm("login")}>
+              {t("showLogin")}
+            </Button>
+            <Button variant="secondary" aria-pressed={form === "register"} onClick={() => setForm("register")}>
+              {t("showRegister")}
+            </Button>
+          </div>
+        ) : (
+          <ErrorMessage code={account.unavailableReason} />
+        )}
 
-      {account.status === "unavailable" ? (
-        <ErrorMessage code={account.unavailableReason} />
-      ) : (
-        <div className="flex gap-2">
-          <button type="button" className="border px-2 py-1" aria-pressed={form === "login"} onClick={() => setForm("login")}>
-            {t("showLogin")}
-          </button>
-          <button
-            type="button"
-            className="border px-2 py-1"
-            aria-pressed={form === "register"}
-            onClick={() => setForm("register")}
-          >
-            {t("showRegister")}
-          </button>
-        </div>
-      )}
+        {accountsAvailable && form === "login" && <LoginForm />}
+        {accountsAvailable && form === "register" && <RegisterForm />}
 
-      {account.status !== "unavailable" && form === "login" && <LoginForm />}
-      {account.status !== "unavailable" && form === "register" && <RegisterForm />}
-
-      <button type="button" className="border px-2 py-1" onClick={account.continueAsGuest}>
-        {t("continueAsGuest")}
-      </button>
+        <Button size="lg" className="w-full" onClick={account.continueAsGuest}>
+          {t("continueAsGuest")}
+        </Button>
+      </Panel>
     </main>
   );
 }

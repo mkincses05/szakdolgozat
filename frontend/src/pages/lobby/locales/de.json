@@ -1,6 +1,10 @@
 {
   "title": "Lobby",
-  "roomCode": "Raumcode: {{code}}",
+  "roomCodeLabel": "Raumcode",
+  "copyCode": "Code kopieren",
+  "copied": "Kopiert!",
+  "copyFailed": "Der Code konnte nicht kopiert werden. Markiere ihn und kopiere ihn selbst.",
+  "emptySeat": "Freier Platz",
   "shareCode": "Teile diesen Code mit den anderen Spielern.",
   "players": "Spieler ({{count}}/{{max}})",
   "minPlayers": "Zum Starten eines Spiels werden mindestens {{min}} Spieler benötigt.",

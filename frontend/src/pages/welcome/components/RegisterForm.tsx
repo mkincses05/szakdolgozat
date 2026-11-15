@@ -8,9 +8,11 @@ import {
   USERNAME_MIN_LENGTH
 } from "@wildhand/shared";
 import { useTranslation } from "react-i18next";
+import { Button } from "../../../components/Button";
 import { ErrorMessage } from "../../../components/ErrorMessage";
+import { FormMessage } from "../../../components/FormMessage";
+import { TextField } from "../../../components/TextField";
 import { useRegisterForm, type RegisterField } from "../hooks/useRegisterForm";
-import { TextField } from "./TextField";
 
 const FIELDS: { field: RegisterField; type?: "email" | "password"; autoComplete: string; maxLength: number }[] = [
   { field: "username", autoComplete: "username", maxLength: USERNAME_MAX_LENGTH },
@@ -33,7 +35,7 @@ export function RegisterForm() {
 
   return (
     <form
-      className="flex flex-col gap-2"
+      className="flex flex-col gap-3"
       // The fields are checked with the shared schemas and translated messages, not by the browser.
       noValidate
       aria-label={t("register.title")}
@@ -42,7 +44,7 @@ export function RegisterForm() {
         form.submit();
       }}
     >
-      <h2>{t("register.title")}</h2>
+      <h2 className="text-xl font-bold">{t("register.title")}</h2>
       {FIELDS.map(({ field, type, autoComplete, maxLength }) => (
         <TextField
           key={field}
@@ -54,13 +56,11 @@ export function RegisterForm() {
           maxLength={maxLength}
         />
       ))}
-      <button type="submit" className="border px-2 py-1" disabled={form.pending}>
+      <Button type="submit" disabled={form.pending}>
         {t("register.submit")}
-      </button>
+      </Button>
       {form.invalidFields.map((field) => (
-        <p key={field} role="alert">
-          {t(`register.validation.${field}`, LIMITS[field])}
-        </p>
+        <FormMessage key={field}>{t(`register.validation.${field}`, LIMITS[field])}</FormMessage>
       ))}
       <ErrorMessage code={form.error} />
     </form>

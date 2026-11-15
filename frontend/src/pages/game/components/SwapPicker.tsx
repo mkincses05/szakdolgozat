@@ -1,6 +1,8 @@
 import type { Card } from "@wildhand/shared";
+import clsx from "clsx";
 import { useTranslation } from "react-i18next";
-import { useCardLabel } from "../hooks/useCardLabel";
+import { CardBack } from "../../../components/CardBack";
+import { PlayingCard } from "../../../components/PlayingCard";
 
 interface SwapPickerProps {
   /** From `getSwapOffers`. */
@@ -13,6 +15,12 @@ interface SwapPickerProps {
   onPositionChange: (position: number) => void;
 }
 
+const CHOICE_CLASSES = clsx(
+  "cursor-pointer rounded-card transition-transform hover:-translate-y-1 active:scale-95",
+  "focus-visible:outline-4 focus-visible:outline-offset-2 focus-visible:outline-accent",
+  "aria-pressed:-translate-y-2 aria-pressed:shadow-glow"
+);
+
 export function SwapPicker({
   offers,
   targetHandSize,
@@ -22,41 +30,45 @@ export function SwapPicker({
   onPositionChange
 }: SwapPickerProps) {
   const { t } = useTranslation("game");
-  const cardLabel = useCardLabel();
 
   return (
-    <>
-      <fieldset className="flex flex-wrap gap-2 border p-2">
-        <legend>{t("options.give")}</legend>
-        {offers.map((card) => (
-          <button
-            key={card.id}
-            type="button"
-            className="border px-2 py-1 aria-pressed:font-bold"
-            aria-pressed={swapCardId === card.id}
-            onClick={() => onSwapCardChange(card.id)}
-          >
-            {cardLabel(card)}
-          </button>
-        ))}
+    <div className="flex flex-wrap justify-center gap-6">
+      <fieldset className="flex flex-col items-center gap-2">
+        <legend className="mb-2 text-center font-semibold">{t("options.give")}</legend>
+        <div className="flex flex-wrap justify-center gap-1.5 pt-2">
+          {offers.map((card) => (
+            <button
+              key={card.id}
+              type="button"
+              aria-pressed={swapCardId === card.id}
+              onClick={() => onSwapCardChange(card.id)}
+              className={CHOICE_CLASSES}
+            >
+              <PlayingCard card={card} size="sm" />
+            </button>
+          ))}
+        </div>
       </fieldset>
 
       {targetHandSize !== null && (
-        <fieldset className="flex flex-wrap gap-2 border p-2">
-          <legend>{t("options.take")}</legend>
-          {Array.from({ length: targetHandSize }, (_, index) => (
-            <button
-              key={index}
-              type="button"
-              className="border px-2 py-1 aria-pressed:font-bold"
-              aria-pressed={position === index}
-              onClick={() => onPositionChange(index)}
-            >
-              {t("options.faceDownCard", { number: index + 1 })}
-            </button>
-          ))}
+        <fieldset className="flex flex-col items-center gap-2">
+          <legend className="mb-2 text-center font-semibold">{t("options.take")}</legend>
+          <div className="flex flex-wrap justify-center gap-1.5 pt-2">
+            {Array.from({ length: targetHandSize }, (_, index) => (
+              <button
+                key={index}
+                type="button"
+                aria-pressed={position === index}
+                onClick={() => onPositionChange(index)}
+                className={CHOICE_CLASSES}
+              >
+                <CardBack size="sm" />
+                <span className="sr-only">{t("options.faceDownCard", { number: index + 1 })}</span>
+              </button>
+            ))}
+          </div>
         </fieldset>
       )}
-    </>
+    </div>
   );
 }

@@ -11,7 +11,8 @@
     "penalty_one": "$t(common:cards.plus2) büntetés: {{count}} lap",
     "penalty_other": "$t(common:cards.plus2) büntetés: {{count}} lap",
     "drawPile_one": "Húzópakli: {{count}} lap",
-    "drawPile_other": "Húzópakli: {{count}} lap"
+    "drawPile_other": "Húzópakli: {{count}} lap",
+    "direction": "A játék az óramutató járásával megegyezően halad."
   },
   "players": {
     "title": "Játékosok",
@@ -38,10 +39,12 @@
     "target": "Válassz játékost",
     "give": "Válaszd ki, melyik lapodat adod oda",
     "take": "Válassz egy lefordított lapot, amit elveszel",
-    "faceDownCard": "{{number}}. lap"
+    "faceDownCard": "{{number}}. lap",
+    "targetHint": "Koppints az asztalnál az egyik kiemelt játékosra."
   },
   "effects": {
     "title": "Események",
+    "empty": "Még nem történt semmi.",
     "cardsPlayed": "{{name}} kijátszotta: {{cards}}.",
     "cardsPlayedWithColor": "{{name}} kijátszotta: {{cards}}, és ezt a színt választotta: {{color}}.",
     "cardDrawn_one": "{{name}} húzott {{count}} lapot.",
@@ -71,5 +74,19 @@
     "warning": "Ha most kilépsz, feladod a meccset.",
     "confirm": "Kilépés és feladás",
     "cancel": "Maradok"
+  },
+  "dialog": {
+    "close": "Bezárás"
+  },
+  "settings": {
+    "open": "Beállítások",
+    "title": "Beállítások"
+  },
+  "topBar": {
+    "room": "Szoba: {{code}}"
+  },
+  "spyDialog": {
+    "title": "$t(common:cards.spy): {{name}}",
+    "private": "Ezeket a lapokat csak te látod."
   }
 }

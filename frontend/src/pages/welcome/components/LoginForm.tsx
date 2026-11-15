@@ -1,8 +1,10 @@
 import { EMAIL_MAX_LENGTH, PASSWORD_MAX_LENGTH } from "@wildhand/shared";
 import { useTranslation } from "react-i18next";
+import { Button } from "../../../components/Button";
 import { ErrorMessage } from "../../../components/ErrorMessage";
+import { FormMessage } from "../../../components/FormMessage";
+import { TextField } from "../../../components/TextField";
 import { useLoginForm } from "../hooks/useLoginForm";
-import { TextField } from "./TextField";
 
 export function LoginForm() {
   const { t } = useTranslation("welcome");
@@ -10,7 +12,7 @@ export function LoginForm() {
 
   return (
     <form
-      className="flex flex-col gap-2"
+      className="flex flex-col gap-3"
       // The fields are checked with the shared schemas and translated messages, not by the browser.
       noValidate
       aria-label={t("login.title")}
@@ -19,7 +21,7 @@ export function LoginForm() {
         form.submit();
       }}
     >
-      <h2>{t("login.title")}</h2>
+      <h2 className="text-xl font-bold">{t("login.title")}</h2>
       <TextField
         label={t("login.login")}
         value={form.values.login}
@@ -35,10 +37,10 @@ export function LoginForm() {
         autoComplete="current-password"
         maxLength={PASSWORD_MAX_LENGTH}
       />
-      <button type="submit" className="border px-2 py-1" disabled={form.pending}>
+      <Button type="submit" disabled={form.pending}>
         {t("login.submit")}
-      </button>
-      {form.missingInput && <p role="alert">{t("login.missingInput")}</p>}
+      </Button>
+      {form.missingInput && <FormMessage>{t("login.missingInput")}</FormMessage>}
       <ErrorMessage code={form.error} />
     </form>
   );

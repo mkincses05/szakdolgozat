@@ -1,6 +1,8 @@
 import { BOT_LEVELS, type BotLevel } from "@wildhand/shared";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
+import { Button } from "../../../components/Button";
+import { Panel } from "../../../components/Panel";
 
 interface AddBotPanelProps {
   disabled: boolean;
@@ -12,22 +14,28 @@ export function AddBotPanel({ disabled, onAdd }: AddBotPanelProps) {
   const [level, setLevel] = useState<BotLevel>("heuristic");
 
   return (
-    <section className="flex flex-col gap-1">
-      <h2>{t("bots.title")}</h2>
-      <label className="flex gap-2">
-        {t("bots.level")}
-        <select className="border" value={level} onChange={(event) => setLevel(event.target.value as BotLevel)}>
+    <Panel className="flex flex-col gap-4">
+      <h2 className="text-xl font-bold">{t("bots.title")}</h2>
+      <fieldset className="flex flex-col gap-2">
+        <legend className="mb-2 font-semibold">{t("bots.level")}</legend>
+        <div className="grid grid-cols-2 gap-2">
           {BOT_LEVELS.map((option) => (
-            <option key={option} value={option}>
+            <Button
+              key={option}
+              variant="secondary"
+              size="sm"
+              aria-pressed={level === option}
+              onClick={() => setLevel(option)}
+            >
               {t(`common:bots.levels.${option}`)}
-            </option>
+            </Button>
           ))}
-        </select>
-      </label>
-      <p>{t(`bots.descriptions.${level}`)}</p>
-      <button type="button" className="border px-2 py-1" disabled={disabled} onClick={() => onAdd(level)}>
+        </div>
+      </fieldset>
+      <p className="min-h-12 text-sm text-ink-soft">{t(`bots.descriptions.${level}`)}</p>
+      <Button disabled={disabled} onClick={() => onAdd(level)}>
         {t("bots.add")}
-      </button>
-    </section>
+      </Button>
+    </Panel>
   );
 }

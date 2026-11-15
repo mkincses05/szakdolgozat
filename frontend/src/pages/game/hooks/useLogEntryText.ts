@@ -3,7 +3,7 @@
 import type { Card, MatchView } from "@wildhand/shared";
 import { useTranslation } from "react-i18next";
 import type { LogEntry } from "./useEffectLog";
-import { useCardLabel } from "./useCardLabel";
+import { useCardLabel } from "../../../hooks/useCardLabel";
 
 export function useLogEntryText(view: MatchView): (entry: LogEntry) => string {
   const { t } = useTranslation("game");

@@ -34,7 +34,9 @@ export function usePlayOptions(view: PlayerMatchView, card: Card | undefined) {
   const swapOffers = card?.kind === "swap" ? getSwapOffers(view, card) : [];
   const target = targets.find((player) => player.userId === options.targetPlayerId);
 
-  const update = (patch: PlayOptions) => setStored({ key, options: { ...options, ...patch } });
+  // Built on the latest stored choices, so quick successive choices do not overwrite each other.
+  const update = (patch: PlayOptions) =>
+    setStored((previous) => ({ key, options: { ...(previous.key === key ? previous.options : {}), ...patch } }));
 
   const complete =
     (!needsColor || options.chosenColor !== undefined) &&

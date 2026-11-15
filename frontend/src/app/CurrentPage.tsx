@@ -1,5 +1,5 @@
-import { useTranslation } from "react-i18next";
 import { ErrorMessage } from "../components/ErrorMessage";
+import { LoadingScreen } from "../components/LoadingScreen";
 import { useAccount } from "../hooks/useAccount";
 import { useServerState } from "../hooks/useServerState";
 import { GamePage } from "../pages/game/GamePage";
@@ -10,7 +10,6 @@ import { WelcomePage } from "../pages/welcome/WelcomePage";
 import { selectPage } from "./selectPage";
 
 export function CurrentPage() {
-  const { t } = useTranslation();
   const state = useServerState();
   const account = useAccount();
 
@@ -18,22 +17,22 @@ export function CurrentPage() {
     case "welcome":
       return (
         <>
-          <ErrorMessage code={state.sessionError} />
+          <ErrorMessage code={state.sessionError} className="mx-auto mt-4" />
           <WelcomePage />
         </>
       );
     case "landing":
       return (
         <>
-          <ErrorMessage code={state.sessionError} />
+          <ErrorMessage code={state.sessionError} className="mx-auto mt-4" />
           <LandingPage />
         </>
       );
     case "loading":
       return (
         <>
-          <ErrorMessage code={state.sessionError} />
-          <p>{t("common:status.loading")}</p>
+          <ErrorMessage code={state.sessionError} className="mx-auto mt-4" />
+          <LoadingScreen />
         </>
       );
     case "lobby":

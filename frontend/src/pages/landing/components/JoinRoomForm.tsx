@@ -1,5 +1,7 @@
 import { ROOM_CODE_LENGTH } from "@wildhand/shared";
 import { useTranslation } from "react-i18next";
+import { Button } from "../../../components/Button";
+import { TextField } from "../../../components/TextField";
 
 interface JoinRoomFormProps {
   roomCode: string;
@@ -13,26 +15,23 @@ export function JoinRoomForm({ roomCode, onRoomCodeChange, onJoin, disabled }: J
 
   return (
     <form
-      className="flex flex-col gap-1"
+      className="flex flex-col gap-3"
       onSubmit={(event) => {
         event.preventDefault();
         onJoin();
       }}
     >
-      <label className="flex flex-col gap-1">
-        {t("roomCode")}
-        <input
-          className="border p-1"
-          value={roomCode}
-          maxLength={ROOM_CODE_LENGTH}
-          autoCapitalize="characters"
-          autoComplete="off"
-          onChange={(event) => onRoomCodeChange(event.target.value)}
-        />
-      </label>
-      <button type="submit" className="border px-2 py-1" disabled={disabled}>
+      <TextField
+        label={t("roomCode")}
+        value={roomCode}
+        onChange={onRoomCodeChange}
+        autoComplete="off"
+        maxLength={ROOM_CODE_LENGTH}
+        variant="code"
+      />
+      <Button type="submit" variant="secondary" disabled={disabled}>
         {t("joinRoom")}
-      </button>
+      </Button>
     </form>
   );
 }

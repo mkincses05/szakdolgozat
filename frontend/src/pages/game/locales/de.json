@@ -11,7 +11,8 @@
     "penalty_one": "$t(common:cards.plus2)-Strafe: {{count}} Karte",
     "penalty_other": "$t(common:cards.plus2)-Strafe: {{count}} Karten",
     "drawPile_one": "Nachziehstapel: {{count}} Karte",
-    "drawPile_other": "Nachziehstapel: {{count}} Karten"
+    "drawPile_other": "Nachziehstapel: {{count}} Karten",
+    "direction": "Es wird im Uhrzeigersinn gespielt."
   },
   "players": {
     "title": "Spieler",
@@ -38,10 +39,12 @@
     "target": "Wähle einen Spieler",
     "give": "Wähle eine Karte zum Abgeben",
     "take": "Wähle eine verdeckte Karte zum Nehmen",
-    "faceDownCard": "Karte {{number}}"
+    "faceDownCard": "Karte {{number}}",
+    "targetHint": "Tippe am Tisch auf einen der leuchtenden Spieler."
   },
   "effects": {
     "title": "Ereignisse",
+    "empty": "Noch keine Ereignisse.",
     "cardsPlayed": "{{name}} hat {{cards}} gespielt.",
     "cardsPlayedWithColor": "{{name}} hat {{cards}} gespielt und {{color}} gewählt.",
     "cardDrawn_one": "{{name}} hat {{count}} Karte gezogen.",
@@ -71,5 +74,19 @@
     "warning": "Wenn du jetzt gehst, gibst du das Spiel auf.",
     "confirm": "Verlassen und aufgeben",
     "cancel": "Bleiben"
+  },
+  "dialog": {
+    "close": "Schließen"
+  },
+  "settings": {
+    "open": "Einstellungen",
+    "title": "Einstellungen"
+  },
+  "topBar": {
+    "room": "Raum {{code}}"
+  },
+  "spyDialog": {
+    "title": "$t(common:cards.spy): {{name}}",
+    "private": "Nur du siehst diese Karten."
   }
 }

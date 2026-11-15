@@ -89,6 +89,41 @@ describe("GamePage", () => {
     expect(screen.getByRole("heading", { name: "Your hand (6 cards)" })).toBeInTheDocument();
   });
 
+  it("seats all eight players of a full match", async () => {
+    const players = Array.from({ length: 8 }, (_, seat) => ({
+      userId: `u${seat + 1}`,
+      displayName: `Player ${seat + 1}`,
+      seat,
+      handSize: seat + 1,
+      matchStatus: "active" as const,
+      presence: "connected" as const,
+      finishPosition: null,
+      isBot: seat > 3,
+      botLevel: seat > 3 ? ("heuristic" as const) : null
+    }));
+    await renderGame(matchView({ players, currentPlayerId: "u5" }));
+
+    expect(screen.getByRole("list", { name: "Players" }).children).toHaveLength(7);
+    expect(screen.getByText("Player 1 (you): 1 card – connected")).toBeInTheDocument();
+    expect(screen.getByText("Player 5 (bot, heuristic): 5 cards – connected – on turn")).toBeInTheDocument();
+    expect(screen.getByText("Player 8 (bot, heuristic): 8 cards – connected")).toBeInTheDocument();
+    expect(screen.getByText("It is Player 5's turn.")).toBeInTheDocument();
+  });
+
+  it("seats everybody around the table for a spectator who does not play", async () => {
+    const { hand: _hand, userId: _userId, ...publicView } = matchView();
+    // The viewer (u1) is not one of the match players.
+    const players = publicView.players.map((player) =>
+      player.userId === "u1" ? { ...player, userId: "u4", displayName: "Dora" } : player
+    );
+    await renderGame({ ...publicView, players, currentPlayerId: "u4", viewer: "spectator" } as unknown as PlayerMatchView);
+
+    expect(screen.getByRole("list", { name: "Players" }).children).toHaveLength(3);
+    expect(screen.getByText("You are watching the match.")).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Play selected cards" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Draw a card" })).not.toBeInTheDocument();
+  });
+
   it("enables only the legal cards and builds a combo from the combo partners", async () => {
     await renderGame(matchView());
 
@@ -193,7 +228,8 @@ describe("GamePage special cards", () => {
     expect(screen.queryByRole("button", { name: "Bela" })).not.toBeInTheDocument();
     fireEvent.click(cardButton("Cili"));
     const give = screen.getByRole("group", { name: "Choose a card to give" });
-    expect(within(give).getAllByRole("button").map((button) => button.textContent)).toEqual(["Green 5", "Red 3"]);
+    expect(within(give).getAllByRole("button")).toHaveLength(2);
+    expect(within(give).getByRole("button", { name: "Red 3" })).toBeInTheDocument();
     fireEvent.click(within(give).getByRole("button", { name: "Green 5" }));
     expect(screen.getAllByRole("button", { name: /^Card \d$/ })).toHaveLength(3);
     expect(cardButton("Play selected cards")).toBeDisabled();
@@ -221,6 +257,17 @@ describe("GamePage special cards", () => {
 
     expect(lastPayload()).toMatchObject({ cardIds: ["rs"], targetPlayerId: "u3" });
     expect(lastPayload()).not.toHaveProperty("swapCardId");
+  });
+
+  it("lets the player choose the Spy target at the table", async () => {
+    await renderGame(matchView({ hand: [spy, green5] }));
+
+    fireEvent.click(cardButton("Spy"));
+    expect(screen.getByText("Tap one of the glowing players at the table.")).toBeInTheDocument();
+    fireEvent.click(cardButton("Cili"));
+
+    expect(cardButton("Cili")).toHaveAttribute("aria-pressed", "true");
+    expect(screen.queryByText("Tap one of the glowing players at the table.")).not.toBeInTheDocument();
   });
 
   it("asks for a target for Spy", async () => {
@@ -251,7 +298,11 @@ describe("GamePage special cards", () => {
       fakeSocket.receive("game:swapResult", { otherPlayerId: "u3", given: green5, received: blue7 });
     });
 
-    const entries = screen.getAllByRole("listitem").map((item) => item.textContent);
+    fireEvent.click(cardButton("Events"));
+    const drawer = screen.getByRole("dialog", { name: "Events" });
+    const entries = within(drawer)
+      .getAllByRole("listitem")
+      .map((item) => item.textContent);
     expect(entries).toEqual(
       expect.arrayContaining([
         "Anna played Storm with value 3. Cards drawn: Bela 3/3, Cili 1/3.",
@@ -265,6 +316,44 @@ describe("GamePage special cards", () => {
     );
   });
 
+  it("shows the hand seen with Spy only in a dialog for the Spy player", async () => {
+    await renderGame(matchView());
+
+    act(() => {
+      fakeSocket.receive("game:effect", { type: "spy", actorId: "u1", targetId: "u3" });
+      fakeSocket.receive("game:spyReveal", { targetPlayerId: "u3", hand: [red7, storm] });
+    });
+
+    const dialog = screen.getByRole("dialog", { name: "Spy: Cili" });
+    expect(within(dialog).getByRole("img", { name: "Red 7" })).toBeInTheDocument();
+    expect(within(dialog).getByRole("img", { name: "Storm" })).toBeInTheDocument();
+    expect(within(dialog).getByText("Only you can see these cards.")).toBeInTheDocument();
+
+    fireEvent.click(within(dialog).getByRole("button", { name: "Close" }));
+    expect(screen.queryByRole("dialog", { name: "Spy: Cili" })).not.toBeInTheDocument();
+  });
+
+  it("announces notable events on the table, but not ordinary plays", async () => {
+    await renderGame(matchView());
+
+    act(() => fakeSocket.receive("game:effect", { type: "cardsPlayed", userId: "u2", cards: [red3], chosenColor: null }));
+    expect(screen.queryByText("Bela played Red 3.")).not.toBeInTheDocument();
+
+    act(() =>
+      fakeSocket.receive("game:effect", {
+        type: "storm",
+        stormPlayerId: "u2",
+        value: 2,
+        draws: [{ userId: "u1", requested: 2, actual: 2 }]
+      })
+    );
+    expect(screen.getByText("Bela played Storm with value 2. Cards drawn: Anna 2/2.")).toBeInTheDocument();
+
+    // A private Swap result shows both cards.
+    act(() => fakeSocket.receive("game:swapResult", { otherPlayerId: "u3", given: green5, received: blue7 }));
+    expect(screen.getByText("Swap: you gave Green 5 to Cili and received Blue 7.")).toBeInTheDocument();
+  });
+
   it("shows a finished player the match as a spectator", async () => {
     const view = matchView({ hand: [], currentPlayerId: "u3" });
     view.players[0] = { ...view.players[0], handSize: 0, matchStatus: "finished", finishPosition: 1 };
@@ -275,6 +364,7 @@ describe("GamePage special cards", () => {
 
     // A finished player leaves without forfeiting, so there is nothing to confirm.
     fakeSocket.emitWithAck.mockResolvedValueOnce({ ok: true });
+    fireEvent.click(cardButton("Settings"));
     fireEvent.click(cardButton("Leave the match"));
     expect(await screen.findByRole("button", { name: "Create room" })).toBeInTheDocument();
   });
@@ -282,6 +372,8 @@ describe("GamePage special cards", () => {
   it("asks an active player to confirm the forfeit before leaving", async () => {
     await renderGame(matchView());
 
+    fireEvent.click(cardButton("Settings"));
+    expect(screen.getByRole("dialog", { name: "Settings" })).toBeInTheDocument();
     fireEvent.click(cardButton("Leave the match"));
     expect(screen.getByText("If you leave now, you forfeit the match.")).toBeInTheDocument();
     fireEvent.click(cardButton("Stay"));

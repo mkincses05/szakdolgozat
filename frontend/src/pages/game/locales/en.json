@@ -11,7 +11,8 @@
     "penalty_one": "$t(common:cards.plus2) penalty: {{count}} card",
     "penalty_other": "$t(common:cards.plus2) penalty: {{count}} cards",
     "drawPile_one": "Draw pile: {{count}} card",
-    "drawPile_other": "Draw pile: {{count}} cards"
+    "drawPile_other": "Draw pile: {{count}} cards",
+    "direction": "Play goes clockwise."
   },
   "players": {
     "title": "Players",
@@ -38,10 +39,12 @@
     "target": "Choose a player",
     "give": "Choose a card to give",
     "take": "Choose a face-down card to take",
-    "faceDownCard": "Card {{number}}"
+    "faceDownCard": "Card {{number}}",
+    "targetHint": "Tap one of the glowing players at the table."
   },
   "effects": {
     "title": "Events",
+    "empty": "No events yet.",
     "cardsPlayed": "{{name}} played {{cards}}.",
     "cardsPlayedWithColor": "{{name}} played {{cards}} and chose {{color}}.",
     "cardDrawn_one": "{{name}} drew {{count}} card.",
@@ -71,5 +74,19 @@
     "warning": "If you leave now, you forfeit the match.",
     "confirm": "Leave and forfeit",
     "cancel": "Stay"
+  },
+  "dialog": {
+    "close": "Close"
+  },
+  "settings": {
+    "open": "Settings",
+    "title": "Settings"
+  },
+  "topBar": {
+    "room": "Room {{code}}"
+  },
+  "spyDialog": {
+    "title": "$t(common:cards.spy): {{name}}",
+    "private": "Only you can see these cards."
   }
 }
