@@ -35,8 +35,12 @@ export function HandArea({ hand, selectedIds, selectableIds, myTurn, onToggle }:
   const tilt = Math.min(4, 30 / Math.max(hand.length, 1));
 
   return (
-    <section aria-labelledby={headingId} className="min-w-0" data-hand>
-      <h2 id={headingId} className="sr-only">
+    <section aria-labelledby={headingId} className="min-w-0">
+      {/* Phones do not show the own seat, so the hand size is shown here instead. */}
+      <h2
+        id={headingId}
+        className="sr-only max-sm:not-sr-only max-sm:relative max-sm:z-10 max-sm:mx-auto max-sm:-mb-6 max-sm:block max-sm:w-fit max-sm:rounded-full max-sm:bg-surface max-sm:px-3 max-sm:py-0.5 max-sm:text-sm max-sm:font-semibold max-sm:text-ink"
+      >
         {t("hand.title", { count: hand.length })}
       </h2>
       {/* Room above for lifted cards and below for the curve, so only sideways scrolling remains. */}
@@ -55,8 +59,9 @@ export function HandArea({ hand, selectedIds, selectableIds, myTurn, onToggle }:
                 onClick={() => onToggle(card)}
                 className={clsx(
                   CARD_SIZE_CLASSES.hand,
-                  // New cards (dealt, drawn, or received with Swap) slide in.
-                  "relative shrink-0 animate-card-enter cursor-pointer rounded-card transition-transform duration-150",
+                  // New cards (dealt, drawn, or received with Swap) slide in. Every card is its own
+                  // layer, so lifting and dimming it is done by the GPU without painting it again.
+                  "relative shrink-0 animate-card-enter cursor-pointer rounded-card transition-transform duration-150 will-change-transform",
                   "focus-visible:z-20 focus-visible:outline-4 focus-visible:outline-offset-2 focus-visible:outline-accent",
                   "disabled:cursor-default",
                   selected

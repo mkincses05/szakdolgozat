@@ -6,19 +6,25 @@ import { useEffect, useMemo, useState } from "react";
 
 const TICK_MS = 250;
 
+function secondsLeft(deadline: number | null, clockOffset: number): number | null {
+  return deadline === null ? null : Math.max(0, Math.ceil((deadline - (Date.now() + clockOffset)) / 1000));
+}
+
 export function useCountdown(deadline: number | null, serverTime: number): number | null {
-  const [now, setNow] = useState(() => Date.now());
   // Recomputed for every received view, which carries a new `serverTime`.
   const clockOffset = useMemo(() => serverTime - Date.now(), [serverTime]);
+  const [seconds, setSeconds] = useState(() => secondsLeft(deadline, clockOffset));
 
   useEffect(() => {
+    setSeconds(secondsLeft(deadline, clockOffset));
     if (deadline === null) {
       return;
     }
-    setNow(Date.now());
-    const interval = setInterval(() => setNow(Date.now()), TICK_MS);
+    // The clock is checked often, but React renders again only when the whole second changes,
+    // because setting the same number again is skipped.
+    const interval = setInterval(() => setSeconds(secondsLeft(deadline, clockOffset)), TICK_MS);
     return () => clearInterval(interval);
-  }, [deadline]);
+  }, [deadline, clockOffset]);
 
-  return deadline === null ? null : Math.max(0, Math.ceil((deadline - (now + clockOffset)) / 1000));
+  return seconds;
 }

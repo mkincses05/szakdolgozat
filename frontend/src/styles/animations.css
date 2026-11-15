@@ -20,11 +20,15 @@
   --animate-toast: toast 2600ms ease-in-out both;
 }
 
-/* A played card flies from the player (offset in --from-x and --from-y) onto the discard pile. */
+/*
+ * A played card flies from the player onto the discard pile. --flight-x and --flight-y are the
+ * offset of the player in percent of the table area, which is a size container, so `cqw` and `cqh`
+ * turn them into distance without measuring anything in JavaScript.
+ */
 @keyframes card-land {
   from {
     opacity: 0.4;
-    transform: translate(var(--from-x, 0), var(--from-y, 0)) scale(0.6) rotate(-25deg);
+    transform: translate(calc(var(--flight-x, 0) * 1cqw), calc(var(--flight-y, 0) * 1cqh)) scale(0.6) rotate(-25deg);
   }
   to {
     opacity: 1;

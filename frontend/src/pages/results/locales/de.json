@@ -12,5 +12,11 @@
   "you": "du",
   "forfeited": "aufgegeben",
   "backToLobby": "Zurück zur Lobby",
-  "leave": "Raum verlassen"
+  "leave": "Raum verlassen",
+  "hero": {
+    "victory": "Du hast gewonnen!",
+    "place": "Du bist auf Platz {{position}}.",
+    "forfeited": "Du hast dieses Spiel aufgegeben.",
+    "goodGame": "Gutes Spiel! Nächstes Mal wartet die Krone auf dich."
+  }
 }

@@ -59,7 +59,11 @@ export const PlayingCard = memo(function PlayingCard({ card, size = "md", classN
       </span>
     </span>
   );
-});
+},
+// A card never changes: the server sends new objects for the same cards with every state, so
+// comparing the id keeps a 20-card hand from rendering again on every update.
+(previous, next) =>
+  previous.card.id === next.card.id && previous.size === next.size && previous.className === next.className);
 
 function Corner({ card, className }: { card: Card; className: string }) {
   return (

@@ -12,5 +12,11 @@
   "you": "te",
   "forfeited": "feladta",
   "backToLobby": "Vissza a váróterembe",
-  "leave": "Kilépés a szobából"
+  "leave": "Kilépés a szobából",
+  "hero": {
+    "victory": "Nyertél!",
+    "place": "{{position}}. helyen végeztél.",
+    "forfeited": "Feladtad ezt a meccset.",
+    "goodGame": "Szép játék! Legközelebb tiéd lehet a korona."
+  }
 }

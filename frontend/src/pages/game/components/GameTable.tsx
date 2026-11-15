@@ -7,7 +7,7 @@ import clsx from "clsx";
 import { useTranslation } from "react-i18next";
 import { CARD_COLOR_BG_CLASSES } from "../../../components/cardFrame";
 import { Logo } from "../../../components/Logo";
-import { useDiscardOrigin } from "../hooks/useDiscardOrigin";
+import type { DiscardFlight } from "../hooks/useDiscardFlight";
 import { DirectionArrows } from "./DirectionArrows";
 import { DiscardPile } from "./DiscardPile";
 import { DrawPile, type DrawControl } from "./DrawPile";
@@ -16,14 +16,13 @@ interface GameTableProps {
   view: MatchView;
   /** `null` for spectators. */
   draw: DrawControl | null;
-  userId: string;
+  flight: DiscardFlight | null;
   /** Set while the toast of a Storm is shown, so that the table shakes once. */
   stormKey: number | null;
 }
 
-export function GameTable({ view, draw, userId, stormKey }: GameTableProps) {
+export function GameTable({ view, draw, flight, stormKey }: GameTableProps) {
   const { t } = useTranslation("game");
-  const origin = useDiscardOrigin(view.topCard.id, view.currentPlayerId);
 
   return (
     <section
@@ -49,8 +48,7 @@ export function GameTable({ view, draw, userId, stormKey }: GameTableProps) {
               topCard={view.topCard}
               activeColor={view.activeColor}
               pendingPenalty={view.pendingPenalty}
-              originUserId={origin}
-              playedByMe={origin === userId}
+              flight={flight}
             />
           </div>
           <div className="flex min-h-7 flex-wrap justify-center gap-2 text-sm font-semibold">

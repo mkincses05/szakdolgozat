@@ -1,11 +1,14 @@
-import { useState } from "react";
+import { memo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { LanguageSelect } from "../../../components/LanguageSelect";
 import { Dialog } from "./Dialog";
 import { LeaveMatchButton } from "./LeaveMatchButton";
 
-/** The gear button and the settings it opens: the language and leaving the match. */
-export function SettingsMenu({ forfeits }: { forfeits: boolean }) {
+/**
+ * The gear button and the settings it opens: the language and leaving the match. Memoized: the top
+ * bar renders again on every update, the settings do not need to.
+ */
+export const SettingsMenu = memo(function SettingsMenu({ forfeits }: { forfeits: boolean }) {
   const { t } = useTranslation("game");
   const [open, setOpen] = useState(false);
 
@@ -30,4 +33,4 @@ export function SettingsMenu({ forfeits }: { forfeits: boolean }) {
       )}
     </>
   );
-}
+});

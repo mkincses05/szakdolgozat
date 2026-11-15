@@ -97,6 +97,29 @@ describe("ResultsPage", () => {
     ]);
   });
 
+  it("tells the player their own place without celebrating", async () => {
+    await renderResults();
+
+    expect(screen.getByText("You finished in place 2.")).toBeInTheDocument();
+    expect(screen.getByText("Good game! The crown is waiting for you next time.")).toBeInTheDocument();
+    expect(screen.queryByText("You won!")).not.toBeInTheDocument();
+  });
+
+  it("congratulates the winner", async () => {
+    saveSession({ ...session, userId: "u2" });
+    fakeSocket.emitWithAck.mockResolvedValueOnce({ ok: true, data: { ...session, userId: "u2" } });
+    render(<App />);
+    await waitFor(() => expect(screen.getByText("Loading…")).toBeInTheDocument());
+    act(() => {
+      fakeSocket.receive("game:state", { ...endedMatch, userId: "u2" });
+      fakeSocket.receive("game:ended", results);
+      fakeSocket.receive("room:state", room);
+    });
+
+    expect(screen.getByText("You won!")).toBeInTheDocument();
+    expect(screen.queryByText("Good game! The crown is waiting for you next time.")).not.toBeInTheDocument();
+  });
+
   it("marks bots with their level and explains a match ended without humans", async () => {
     saveSession(session);
     fakeSocket.emitWithAck.mockResolvedValueOnce({ ok: true, data: session });

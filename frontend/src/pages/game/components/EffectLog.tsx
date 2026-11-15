@@ -2,18 +2,19 @@ import type { MatchView } from "@wildhand/shared";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import type { LogItem } from "../hooks/useEffectLog";
-import { useLogEntryText } from "../hooks/useLogEntryText";
-import { Dialog } from "./Dialog";
+import { EffectLogDrawer } from "./EffectLogDrawer";
 
 interface EffectLogProps {
   view: MatchView;
   items: LogItem[];
 }
 
-/** The button in the top bar and the drawer with the latest events, newest first. */
+/**
+ * The button in the top bar with the number of events. The texts are built only while the drawer
+ * is open, because the top bar renders again on every update.
+ */
 export function EffectLog({ view, items }: EffectLogProps) {
   const { t } = useTranslation("game");
-  const text = useLogEntryText(view);
   const [open, setOpen] = useState(false);
 
   return (
@@ -33,18 +34,7 @@ export function EffectLog({ view, items }: EffectLogProps) {
           </span>
         )}
       </button>
-      {open && (
-        <Dialog title={t("effects.title")} placement="side" onClose={() => setOpen(false)}>
-          <ul className="flex flex-col gap-2">
-            {items.length === 0 && <li className="text-ink-soft">{t("effects.empty")}</li>}
-            {items.map((item) => (
-              <li key={item.id} className="rounded-2xl bg-ink-dark/5 px-4 py-2">
-                {text(item.entry)}
-              </li>
-            ))}
-          </ul>
-        </Dialog>
-      )}
+      {open && <EffectLogDrawer view={view} items={items} onClose={() => setOpen(false)} />}
     </>
   );
 }

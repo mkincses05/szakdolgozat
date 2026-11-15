@@ -1,10 +1,12 @@
 // The Wildhand wordmark: gold letters with a thick purple outline. Its text is the translated app
 // title, so it can be used inside a heading. The size follows the font size of the parent.
+// Memoized, because the game table renders it on every update.
 
 import clsx from "clsx";
+import { memo } from "react";
 import { useTranslation } from "react-i18next";
 
-export function Logo({ className }: { className?: string }) {
+export const Logo = memo(function Logo({ className }: { className?: string }) {
   const { t } = useTranslation();
 
   return (
@@ -18,4 +20,4 @@ export function Logo({ className }: { className?: string }) {
       </span>
     </span>
   );
-}
+});

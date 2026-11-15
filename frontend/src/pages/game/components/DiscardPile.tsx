@@ -3,11 +3,11 @@
 
 import type { Card, CardColor } from "@wildhand/shared";
 import clsx from "clsx";
-import type { CSSProperties } from "react";
+import { memo, type CSSProperties } from "react";
 import { useTranslation } from "react-i18next";
 import { PlayingCard } from "../../../components/PlayingCard";
 import { useCardLabel } from "../../../hooks/useCardLabel";
-import { useLandingOffset } from "../hooks/useLandingOffset";
+import type { DiscardFlight } from "../hooks/useDiscardFlight";
 
 const RING_CLASSES: Record<CardColor, string> = {
   red: "ring-card-red",
@@ -20,16 +20,13 @@ interface DiscardPileProps {
   topCard: Card;
   activeColor: CardColor | null;
   pendingPenalty: number;
-  /** The player who played the top card, `null` for the starting card. */
-  originUserId: string | null;
-  /** The viewer played it: the card flies in from the own hand. */
-  playedByMe: boolean;
+  /** Where the top card flies in from; `null` for the starting card. */
+  flight: DiscardFlight | null;
 }
 
-export function DiscardPile({ topCard, activeColor, pendingPenalty, originUserId, playedByMe }: DiscardPileProps) {
+export const DiscardPile = memo(function DiscardPile({ topCard, activeColor, pendingPenalty, flight }: DiscardPileProps) {
   const { t } = useTranslation("game");
   const cardLabel = useCardLabel();
-  const landing = useLandingOffset(topCard.id, originUserId, playedByMe);
 
   return (
     <div className="relative z-10 flex flex-col items-center">
@@ -42,13 +39,13 @@ export function DiscardPile({ topCard, activeColor, pendingPenalty, originUserId
         {/* A new key for every top card restarts the animation. */}
         <span
           key={topCard.id}
-          ref={landing.ref}
-          className={clsx("block", landing.offset && "animate-card-land")}
-          style={
-            landing.offset
-              ? ({ "--from-x": `${landing.offset.x}px`, "--from-y": `${landing.offset.y}px` } as CSSProperties)
-              : undefined
-          }
+          className={clsx(
+            "block",
+            flight && "animate-card-land",
+            // On phones the opponents are a strip above the table.
+            flight?.fromOpponent && "max-md:[--flight-x:0]! max-md:[--flight-y:-55]!"
+          )}
+          style={flight ? ({ "--flight-x": flight.x, "--flight-y": flight.y } as CSSProperties) : undefined}
         >
           <PlayingCard card={topCard} size="hand" className="-rotate-3" />
         </span>
@@ -63,5 +60,17 @@ export function DiscardPile({ topCard, activeColor, pendingPenalty, originUserId
       )}
       <p className="sr-only">{t("table.topCard", { card: cardLabel(topCard) })}</p>
     </div>
+  );
+}, sameDiscardPile);
+
+/** New states bring new objects for the same top card and flight; only a changed value counts. */
+function sameDiscardPile(previous: DiscardPileProps, next: DiscardPileProps): boolean {
+  return (
+    previous.topCard.id === next.topCard.id &&
+    previous.activeColor === next.activeColor &&
+    previous.pendingPenalty === next.pendingPenalty &&
+    previous.flight?.x === next.flight?.x &&
+    previous.flight?.y === next.flight?.y &&
+    previous.flight?.fromOpponent === next.flight?.fromOpponent
   );
 }

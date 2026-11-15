@@ -2,10 +2,12 @@
 // from the hooks; the shared helpers decide what is playable, and the server decides the result.
 
 import { getDrawOption, type PlayerMatchView } from "@wildhand/shared";
+import { useMemo } from "react";
 import { ErrorMessage } from "../../../components/ErrorMessage";
 import { useCardSelection } from "../hooks/useCardSelection";
 import { useGameActions } from "../hooks/useGameActions";
 import { usePlayOptions } from "../hooks/usePlayOptions";
+import { useStableCallback } from "../hooks/useStableCallback";
 import { ActionBar } from "./ActionBar";
 import { GameScreen } from "./GameScreen";
 import { HandArea } from "./HandArea";
@@ -16,18 +18,20 @@ export function ActivePlayerScreen({ view }: { view: PlayerMatchView }) {
   const actions = useGameActions(view.stateVersion);
   const play = usePlayOptions(view, selection.first);
   const myTurn = view.currentPlayerId === view.userId;
+  const onDraw = useStableCallback(actions.draw);
+  const drawOption = getDrawOption(view);
+  // A stable object while nothing changes, so that the memoized draw pile can skip rendering.
+  const draw = useMemo(
+    () => ({ option: drawOption, penalty: view.pendingPenalty, disabled: actions.pending, onDraw }),
+    [drawOption, view.pendingPenalty, actions.pending, onDraw]
+  );
 
   return (
     <GameScreen
       view={view}
       userId={view.userId}
       forfeits
-      draw={{
-        option: getDrawOption(view),
-        penalty: view.pendingPenalty,
-        disabled: actions.pending,
-        onDraw: actions.draw
-      }}
+      draw={draw}
       targeting={
         play.targets.length > 0
           ? { targets: play.targets, selectedId: play.options.targetPlayerId, onSelect: play.chooseTarget }

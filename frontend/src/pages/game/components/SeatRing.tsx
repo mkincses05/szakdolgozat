@@ -3,7 +3,6 @@
 
 import type { MatchView, PublicPlayerView } from "@wildhand/shared";
 import clsx from "clsx";
-import type { CSSProperties } from "react";
 import { useTranslation } from "react-i18next";
 import type { SeatPlacement } from "../hooks/useSeatLayout";
 import { PlayerSeat } from "./PlayerSeat";
@@ -34,28 +33,25 @@ export function SeatRing({ view, seats, compact, targeting }: SeatRingProps) {
       )}
     >
       {seats.map(({ player, x, y }) => {
+        const isCurrent = player.userId === view.currentPlayerId;
         const valid = targeting?.targets.some((target) => target.userId === player.userId) ?? false;
         return (
           <PlayerSeat
             key={player.userId}
             player={player}
             isYou={false}
-            isCurrent={player.userId === view.currentPlayerId}
-            turnDeadline={view.turnDeadline}
-            serverTime={view.serverTime}
+            isCurrent={isCurrent}
+            // Only the seat on turn needs the clock; the others then skip rendering on new states.
+            turnDeadline={isCurrent ? view.turnDeadline : null}
+            serverTime={isCurrent ? view.serverTime : 0}
             compact={compact}
             target={
-              targeting === null
-                ? undefined
-                : valid
-                  ? {
-                      selected: targeting.selectedId === player.userId,
-                      onSelect: () => targeting.onSelect(player.userId)
-                    }
-                  : null
+              targeting === null ? undefined : !valid ? "invalid" : targeting.selectedId === player.userId ? "selected" : "valid"
             }
+            onSelect={targeting?.onSelect}
+            x={x}
+            y={y}
             className="md:pointer-events-auto md:absolute md:top-(--seat-y) md:left-(--seat-x) md:-translate-x-1/2 md:-translate-y-1/2"
-            style={{ "--seat-x": `${x}%`, "--seat-y": `${y}%` } as CSSProperties}
           />
         );
       })}

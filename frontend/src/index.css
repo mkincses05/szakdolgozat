@@ -75,6 +75,9 @@
   --color-success: var(--color-card-green);
   --color-danger: var(--color-card-red);
   --color-warning: #ffb020;
+  /* Podium of the results: gold is the accent, silver and bronze follow. */
+  --color-silver: #d5ddeb;
+  --color-bronze: #e3a56f;
 
   /* Avatars. */
   --color-skin-1: #ffdcc4;

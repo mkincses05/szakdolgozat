@@ -6,6 +6,7 @@
 import type { MatchView } from "@wildhand/shared";
 import type { ReactNode } from "react";
 import { useServerState } from "../../../hooks/useServerState";
+import { useDiscardFlight } from "../hooks/useDiscardFlight";
 import { useEffectLog } from "../hooks/useEffectLog";
 import { useLatestEvent } from "../hooks/useLatestEvent";
 import { useSeatLayout } from "../hooks/useSeatLayout";
@@ -34,14 +35,16 @@ export function GameScreen({ view, userId, forfeits, draw, targeting, children }
   const events = useEffectLog();
   const latest = useLatestEvent(events);
   const spy = useSpyReveal(events);
+  const flight = useDiscardFlight(view, userId, layout);
   const stormKey = latest?.entry.type === "effect" && latest.entry.effect.type === "storm" ? latest.id : null;
 
   return (
     <main className="flex h-dvh flex-col overflow-hidden">
       <TopBar view={view} userId={userId} roomCode={room?.code ?? null} forfeits={forfeits} events={events} />
 
-      <div className="relative flex min-h-0 flex-1 flex-col gap-2 px-2 pt-1 md:block md:px-4">
-        <GameTable view={view} draw={draw} userId={userId} stormKey={stormKey} />
+      {/* A size container: the card flight is measured in its `cqw` and `cqh` units. */}
+      <div className="relative flex min-h-0 flex-1 flex-col gap-2 px-2 pt-1 [container-type:size] md:block md:px-4">
+        <GameTable view={view} draw={draw} flight={flight} stormKey={stormKey} />
         <SeatRing view={view} seats={layout.others} compact={layout.compact} targeting={targeting} />
         {latest && <EffectToast key={latest.id} item={latest} view={view} />}
       </div>
@@ -53,8 +56,8 @@ export function GameScreen({ view, userId, forfeits, draw, targeting, children }
               player={layout.me}
               isYou
               isCurrent={layout.me.userId === view.currentPlayerId}
-              turnDeadline={view.turnDeadline}
-              serverTime={view.serverTime}
+              turnDeadline={layout.me.userId === view.currentPlayerId ? view.turnDeadline : null}
+              serverTime={layout.me.userId === view.currentPlayerId ? view.serverTime : 0}
             />
           </ul>
         )}

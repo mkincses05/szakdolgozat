@@ -12,11 +12,6 @@ import { usePlayerDescription } from "../hooks/usePlayerDescription";
 import { CountdownRing } from "./CountdownRing";
 import { MiniFan } from "./MiniFan";
 
-export interface SeatTarget {
-  selected: boolean;
-  onSelect: () => void;
-}
-
 interface PlayerSeatProps {
   player: PublicPlayerView;
   isYou: boolean;
@@ -24,10 +19,13 @@ interface PlayerSeatProps {
   turnDeadline: number | null;
   serverTime: number;
   compact?: boolean;
-  /** Set while a target is chosen: `null` for players who cannot be chosen. */
-  target?: SeatTarget | null;
+  /** Set while a target is chosen: `invalid` for players who cannot be chosen. */
+  target?: "valid" | "selected" | "invalid";
+  onSelect?: (userId: string) => void;
+  /** Position at the table from `seatLayout`, in percent; used from `md` on. */
+  x?: number;
+  y?: number;
   className?: string;
-  style?: CSSProperties;
 }
 
 export const PlayerSeat = memo(function PlayerSeat({
@@ -38,12 +36,16 @@ export const PlayerSeat = memo(function PlayerSeat({
   serverTime,
   compact = false,
   target,
-  className,
-  style
+  onSelect,
+  x,
+  y,
+  className
 }: PlayerSeatProps) {
   const describe = usePlayerDescription();
   const out = player.matchStatus !== "active" || player.presence !== "connected";
   const choosing = target !== undefined;
+  const choosable = target === "valid" || target === "selected";
+  const style = x === undefined ? undefined : ({ "--seat-x": `${x}%`, "--seat-y": `${y}%` } as CSSProperties);
 
   const content = (
     <>
@@ -57,7 +59,7 @@ export const PlayerSeat = memo(function PlayerSeat({
           size={compact ? "sm" : "md"}
           crown={player.finishPosition === 1}
           dimmed={out}
-          className={clsx(target?.selected && "ring-4 ring-accent rounded-full")}
+          className={clsx(target === "selected" && "rounded-full ring-4 ring-accent")}
         />
         {isCurrent && <CountdownRing deadline={turnDeadline} serverTime={serverTime} />}
         <span
@@ -92,14 +94,14 @@ export const PlayerSeat = memo(function PlayerSeat({
   );
 
   return (
-    <li className={layout} style={style} data-seat-id={player.userId}>
-      {target ? (
+    <li className={layout} style={style}>
+      {choosable ? (
         <button
           type="button"
           aria-label={player.displayName}
-          aria-pressed={target.selected}
+          aria-pressed={target === "selected"}
           className="relative isolate flex w-full cursor-pointer flex-col items-center gap-1 rounded-3xl p-1 transition-transform hover:scale-105 focus-visible:outline-4 focus-visible:outline-accent active:scale-95"
-          onClick={target.onSelect}
+          onClick={() => onSelect?.(player.userId)}
         >
           <span aria-hidden="true" className="absolute -inset-1 -z-10 rounded-3xl bg-accent/35 shadow-glow" />
           {content}
@@ -109,7 +111,22 @@ export const PlayerSeat = memo(function PlayerSeat({
       )}
     </li>
   );
-});
+}, samePlayerSeat);
+
+/** The server sends new player objects with every state; a seat renders again only if a value changed. */
+function samePlayerSeat(previous: PlayerSeatProps, next: PlayerSeatProps): boolean {
+  const keys = new Set([...Object.keys(previous), ...Object.keys(next)]) as Set<keyof PlayerSeatProps>;
+  for (const key of keys) {
+    if (key === "player") {
+      const a = previous.player;
+      const b = next.player;
+      if ((Object.keys(a) as (keyof PublicPlayerView)[]).some((field) => a[field] !== b[field])) return false;
+    } else if (previous[key] !== next[key]) {
+      return false;
+    }
+  }
+  return true;
+}
 
 /** Finished place, forfeit, or a lost connection; the full text is in the screen reader description. */
 function StatusChip({ player }: { player: PublicPlayerView }) {

@@ -3,6 +3,7 @@
 
 import type { DrawOption } from "@wildhand/shared";
 import clsx from "clsx";
+import { memo } from "react";
 import { useTranslation } from "react-i18next";
 import { CardBack } from "../../../components/CardBack";
 
@@ -20,7 +21,8 @@ interface DrawPileProps {
   control: DrawControl | null;
 }
 
-export function DrawPile({ size, control }: DrawPileProps) {
+// Memoized: `control` keeps its identity while nothing about drawing changes.
+export const DrawPile = memo(function DrawPile({ size, control }: DrawPileProps) {
   const { t } = useTranslation("game");
   // A few backs show the height of the pile; the exact number is in the badge.
   const layers = Math.min(3, Math.ceil(size / 25));
@@ -64,4 +66,4 @@ export function DrawPile({ size, control }: DrawPileProps) {
       <p className="sr-only">{t("table.drawPile", { count: size })}</p>
     </div>
   );
-}
+});

@@ -1,7 +1,8 @@
+import { memo } from "react";
 import { useTranslation } from "react-i18next";
 
-/** Two faint arrows on the felt: play always goes clockwise (R3). */
-export function DirectionArrows() {
+/** Two faint arrows on the felt: play always goes clockwise (R3). Memoized: it never changes. */
+export const DirectionArrows = memo(function DirectionArrows() {
   const { t } = useTranslation("game");
 
   return (
@@ -26,4 +27,4 @@ export function DirectionArrows() {
       <p className="sr-only">{t("table.direction")}</p>
     </>
   );
-}
+});

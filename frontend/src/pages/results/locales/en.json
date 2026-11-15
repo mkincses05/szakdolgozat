@@ -12,5 +12,11 @@
   "you": "you",
   "forfeited": "forfeited",
   "backToLobby": "Back to the lobby",
-  "leave": "Leave room"
+  "leave": "Leave room",
+  "hero": {
+    "victory": "You won!",
+    "place": "You finished in place {{position}}.",
+    "forfeited": "You forfeited this match.",
+    "goodGame": "Good game! The crown is waiting for you next time."
+  }
 }
